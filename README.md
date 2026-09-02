@@ -109,10 +109,16 @@ that window lives on. A fallback to activate-and-send-`Cmd+N` remains in case
 the menu layout changes, and the workspace is restored afterwards if focus did
 move.
 
-Roughly 0.30s end to end, down from 0.67s for the activate-and-type approach.
-The remaining cost is one `osascript` launch (~150ms) plus two AeroSpace CLI
-calls; the two startup queries are batched into a single `aerospace eval`,
-since each CLI invocation costs ~34ms.
+The new window is then given keyboard focus explicitly. Without that it is
+created unfocused whenever Warp was not already frontmost, and typing keeps
+going to the app you came from.
+
+Roughly 0.45s end to end. Most of that is Warp itself: the menu click returns
+in ~150ms but the window does not exist for another ~210ms, and it cannot be
+focused before it exists. The script's own overhead is one `osascript` launch
+plus two AeroSpace CLI calls — the startup queries are batched into a single
+`aerospace eval`, and the workspace-jump check is skipped unless the fallback
+path ran, since each CLI invocation costs ~34ms.
 
 Two requirements:
 

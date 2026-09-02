@@ -25,21 +25,24 @@ APP_ID="dev.warp.Warp-Stable"
 MENU_ITEM="New Window"
 AEROSPACE="$(command -v aerospace || echo /opt/homebrew/bin/aerospace)"
 
-windows() {
-  "$AEROSPACE" list-windows --monitor all --app-bundle-id "$APP_ID" --count 2>/dev/null || echo 0
+window_ids() {
+  "$AEROSPACE" list-windows --monitor all --app-bundle-id "$APP_ID" \
+    --format '%{window-id}' 2>/dev/null
 }
 
 # Each aerospace CLI call costs ~34ms, so ask for both facts in one `eval`
-# rather than two invocations. Line 1: focused workspace. Line 2: window count.
-STATE="$("$AEROSPACE" eval "list-workspaces --focused;          list-windows --monitor all --app-bundle-id $APP_ID --count" 2>/dev/null)"
+# rather than two invocations. Line 1: focused workspace. Lines 2+: the window
+# ids, diffed later to identify the one we just created.
+STATE="$("$AEROSPACE" eval "list-workspaces --focused; list-windows --monitor all --app-bundle-id $APP_ID --format '%{window-id}'" 2>/dev/null)"
 WS_BEFORE="$(printf '%s\n' "$STATE" | sed -n 1p)"
-BEFORE="$(printf '%s\n' "$STATE" | sed -n 2p)"
-[ -n "$BEFORE" ] || BEFORE=0
+IDS_BEFORE="$(printf '%s\n' "$STATE" | sed -n '2,$p')"
+BEFORE="$(printf '%s' "$IDS_BEFORE" | grep -c . || true)"
 
 # A window count above zero already proves Warp is running, so there is no need
 # for a separate `list-apps` check. (And not pgrep: it cannot see other
 # applications' processes from a sandboxed shell and silently reports nothing,
 # which used to send this down the wrong branch.)
+FELL_BACK=false
 if [ "$BEFORE" -gt 0 ]; then
   # Fast path: click File > New Window without bringing Warp forward.
   if ! osascript -e "tell application \"System Events\" to tell process \"$APP\" \
@@ -47,28 +50,44 @@ if [ "$BEFORE" -gt 0 ]; then
         >/dev/null 2>&1; then
     # Menu layout changed, or the click was refused -- fall back to the old
     # activate-and-type route.
+    FELL_BACK=true
     open -a "$APP"
     sleep 0.25
     osascript -e 'tell application "System Events" to keystroke "n" using command down' 2>/dev/null
   fi
 else
   # Not running (or running with no windows): activating opens one by itself.
+  FELL_BACK=true
   open -a "$APP"
 fi
 
-# The menu route does not move us, so there is normally nothing to undo and we
-# are done here. Only pay for the wait-and-move if focus actually left.
-WS_NOW="$("$AEROSPACE" list-workspaces --focused 2>/dev/null)"
-[ "$WS_NOW" = "$WS_BEFORE" ] && exit 0
-
-# Focus moved: wait for the new window to exist, then bring it -- and us --
-# back to where we started.
-for _ in $(seq 1 30); do
-  [ "$(windows)" -gt "$BEFORE" ] && break
-  sleep 0.1
+# Wait for the new window and work out which one it is. The menu route does not
+# bring Warp forward, so without this the window is created unfocused and
+# keystrokes keep going to whatever was already in front.
+NEW_ID=""
+for _ in $(seq 1 40); do
+  IDS_NOW="$(window_ids)"
+  if [ "$(printf '%s' "$IDS_NOW" | grep -c .)" -gt "$BEFORE" ]; then
+    NEW_ID="$(comm -13 <(printf '%s\n' "$IDS_BEFORE" | sort) \
+                       <(printf '%s\n' "$IDS_NOW"    | sort) | grep -m1 .)"
+    [ -n "$NEW_ID" ] && break
+  fi
+  sleep 0.02
 done
 
-if [ -n "$WS_BEFORE" ]; then
-  "$AEROSPACE" move-node-to-workspace "$WS_BEFORE" 2>/dev/null
+# Only the fallback activates Warp, and only activating can drag us onto the
+# workspace its existing window lives on. Skip the query otherwise (~34ms).
+WS_NOW="$WS_BEFORE"
+$FELL_BACK && WS_NOW="$("$AEROSPACE" list-workspaces --focused 2>/dev/null)"
+if [ -n "$WS_BEFORE" ] && [ "$WS_NOW" != "$WS_BEFORE" ]; then
+  if [ -n "$NEW_ID" ]; then
+    "$AEROSPACE" move-node-to-workspace --window-id "$NEW_ID" "$WS_BEFORE" 2>/dev/null
+  else
+    "$AEROSPACE" move-node-to-workspace "$WS_BEFORE" 2>/dev/null
+  fi
   "$AEROSPACE" workspace "$WS_BEFORE" 2>/dev/null
 fi
+
+# Hand the new window keyboard focus.
+[ -n "$NEW_ID" ] && "$AEROSPACE" focus --window-id "$NEW_ID" 2>/dev/null
+exit 0
