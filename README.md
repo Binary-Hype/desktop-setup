@@ -46,9 +46,15 @@ Each component carries its own dependencies (`aerospace` → the cask;
 `sketchybar` → the formula, Nerd Font, `blueutil`, `jq`; `borders` → the
 formula), so a partial install only pulls what it needs.
 
-**One cross-dependency:** `bordersrc` reads its palette from
-`sketchybar/colors.sh`. Installing `borders` without `sketchybar` warns if that
-file is not already present.
+**Two cross-dependencies**, both handled automatically:
+
+- `bordersrc` reads its palette from `sketchybar/colors.sh`. Installing
+  `borders` without `sketchybar` warns if that file is not already present.
+- `gaps.outer.top` in `aerospace.toml` reserves vertical room for the bar
+  (`BAR_Y_OFFSET + BAR_HEIGHT + gap`). Installed **without** sketchybar that
+  would be ~40pt of dead space above every window, so `install.sh` rewrites it
+  to a plain `6`. The repo copy keeps the bar-aware value, so adding sketchybar
+  later and re-running `./install.sh --only aerospace` restores it.
 
 ## Update the repo from this machine
 

@@ -28,6 +28,10 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 
 ALL_COMPONENTS=(aerospace sketchybar borders)
 
+# Top gap used when AeroSpace is installed without SketchyBar (nothing to
+# clear, so it just matches the other outer gaps).
+NO_BAR_TOP_GAP=6
+
 DRY_RUN=false
 NO_DEPS=false
 NO_SERVICES=false
@@ -200,6 +204,27 @@ if ! $DRY_RUN; then
   want borders && chmod +x "$DEST/borders/bordersrc" 2>/dev/null || true
 fi
 
+# ── 2b. Adapt gaps.outer.top when there is no bar ─────────────────────────────
+# gaps.outer.top reserves vertical room for SketchyBar (BAR_Y_OFFSET +
+# BAR_HEIGHT + a small gap). Installed WITHOUT sketchybar, that is ~40pt of
+# dead space above every window. Rewrite it to a plain gap in that case.
+# The repo copy keeps the bar-aware value, so re-running this with sketchybar
+# present restores it.
+if want aerospace && [ -f "$DEST/aerospace/aerospace.toml" ]; then
+  BAR_PRESENT=false
+  want sketchybar && BAR_PRESENT=true
+  [ -f "$DEST/sketchybar/variables.sh" ] && BAR_PRESENT=true
+
+  if ! $BAR_PRESENT; then
+    step "No SketchyBar on this machine -- adjusting gaps.outer.top"
+    info "was: $(grep -m1 '^outer\.top' "$DEST/aerospace/aerospace.toml" || echo '?')"
+    info "now: outer.top = $NO_BAR_TOP_GAP (plain gap, no bar to clear)"
+    run sed -i '' \
+      "s|^outer\.top .*|outer.top        = $NO_BAR_TOP_GAP   # no SketchyBar here -- set by install.sh|" \
+      "$DEST/aerospace/aerospace.toml"
+  fi
+fi
+
 # ── 3. Services ───────────────────────────────────────────────────────────────
 if $NO_SERVICES; then
   step "Skipping services (--no-services)"
@@ -210,6 +235,11 @@ else
   if want aerospace; then
     if [ -d "/Applications/AeroSpace.app" ]; then
       run open -a AeroSpace
+      # `open` is a no-op if it is already running, so reload explicitly.
+      if ! $DRY_RUN && command -v aerospace >/dev/null 2>&1; then
+        sleep 2
+        aerospace reload-config >/dev/null 2>&1 && info "reloaded AeroSpace config" || true
+      fi
     else
       warn "AeroSpace.app not found in /Applications"
     fi
