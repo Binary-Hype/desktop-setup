@@ -126,22 +126,29 @@ Two requirements:
   Security > Accessibility), or the keystroke is silently dropped.
 - **It captures `Cmd+Return` globally.** Apps that use it to send (Slack,
   GitHub, Jira) no longer receive it. Change the binding to `alt-enter` in
-  `aerospace.toml` to get it back — `alt` is otherwise unused.
+  `aerospace.toml` to get it back — plain `alt-enter` types no character.
 
 ## Keybindings — workspaces
 
 | keys | action |
 |---|---|
-| `alt` + `1`…`9` | switch to workspace N |
-| `alt+shift` + `1`…`9` | move focused window to workspace N |
+| `ctrl+alt` + `1`…`9` | switch to workspace N |
+| `ctrl+alt+shift` + `1`…`9` | move focused window to workspace N |
 | `cmd` + `1`…`9` | same, but **fails inside Chromium apps** |
 | `cmd+shift` + `1`…`9` | same |
 
 Chromium-based apps — Brave, WhatsApp, Electron apps generally — intercept
 `cmd-1`…`8` for their own tab switching *before* AeroSpace's global hotkey sees
-it, so `cmd-N` silently does nothing while one of them is focused. `alt-N` is
-claimed by nothing and always works; it is also AeroSpace's upstream default,
-for exactly this reason.
+it, so `cmd-N` silently does nothing while one of them is focused. `ctrl-alt-N`
+is claimed by nothing and always works.
+
+**Why `ctrl+alt` and not plain `alt`** (AeroSpace's upstream default): on the
+German keyboard layout Option *is* the character modifier — `alt-l` is `@`,
+`alt-5`/`alt-6` are `[` `]`, `alt-8`/`alt-9` are `{` `}`, `alt-7` is `|`,
+`alt-n` is `~`, `alt-e` is `€`. Binding plain `alt-*` swallows those characters
+system-wide, so typing `@` would jump monitors instead. Ctrl+Option produces no
+characters on any macOS layout. On a US layout plain `alt` is fine — drop the
+`ctrl-` prefix if that is all you use.
 
 The `cmd-N` bindings are kept because they still work everywhere else, and
 inside Chromium `cmd-N` now usefully falls through to tab switching. Delete them
@@ -160,15 +167,15 @@ to lift that.
 
 | keys | action |
 |---|---|
-| `alt` + `h/j/k/l` | focus the monitor in that direction |
-| `alt+shift` + `h/j/k/l` | move the focused **window** to that monitor |
+| `ctrl+alt` + `h/j/k/l` | focus the monitor in that direction |
+| `ctrl+alt+shift` + `h/j/k/l` | move the focused **window** to that monitor |
 | `cmd+shift+tab` | move the whole **workspace** to the next monitor |
 
 All wrap around. The window moves keep focus on the window you moved
 (`--focus-follows-window`) rather than leaving it on the old monitor.
 
-`alt` is used for nothing else in this config, so these cannot collide with the
-`cmd` bindings or with macOS.
+`ctrl+alt` is used for nothing else in this config, so these cannot collide
+with the `cmd` bindings, with macOS, or with German-layout Option characters.
 
 ## Machine-specific values
 

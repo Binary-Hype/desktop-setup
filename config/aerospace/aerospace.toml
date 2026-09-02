@@ -120,29 +120,34 @@ cmd-9 = 'workspace 9'
 
 # Chromium-based apps (Brave, WhatsApp, Electron in general) intercept
 # cmd-1..8 for their own tab switching before AeroSpace's global hotkey sees
-# it, so cmd-N silently fails while they are focused. alt-N is claimed by
-# nothing and always works -- it is also AeroSpace's own upstream default.
+# it, so cmd-N silently fails while they are focused. ctrl-alt-N always works.
 # The cmd-N bindings are kept: they still work everywhere except Chromium,
 # where cmd-N now usefully falls through to tab switching.
-alt-1 = 'workspace 1'
-alt-2 = 'workspace 2'
-alt-3 = 'workspace 3'
-alt-4 = 'workspace 4'
-alt-5 = 'workspace 5'
-alt-6 = 'workspace 6'
-alt-7 = 'workspace 7'
-alt-8 = 'workspace 8'
-alt-9 = 'workspace 9'
+#
+# NOTE: ctrl-alt, not plain alt (AeroSpace's upstream default). On the German
+# keyboard layout Option is the dead-key modifier that types @ [ ] { } | \ ~ € --
+# alt-l is @, alt-5/6 are [ ], alt-8/9 are { }, alt-7 is |, alt-n is ~. Binding
+# plain alt-* swallows those characters system-wide. Ctrl+Option produces no
+# characters on any macOS layout, so it is safe.
+ctrl-alt-1 = 'workspace 1'
+ctrl-alt-2 = 'workspace 2'
+ctrl-alt-3 = 'workspace 3'
+ctrl-alt-4 = 'workspace 4'
+ctrl-alt-5 = 'workspace 5'
+ctrl-alt-6 = 'workspace 6'
+ctrl-alt-7 = 'workspace 7'
+ctrl-alt-8 = 'workspace 8'
+ctrl-alt-9 = 'workspace 9'
 
-alt-shift-1 = 'move-node-to-workspace 1'
-alt-shift-2 = 'move-node-to-workspace 2'
-alt-shift-3 = 'move-node-to-workspace 3'
-alt-shift-4 = 'move-node-to-workspace 4'
-alt-shift-5 = 'move-node-to-workspace 5'
-alt-shift-6 = 'move-node-to-workspace 6'
-alt-shift-7 = 'move-node-to-workspace 7'
-alt-shift-8 = 'move-node-to-workspace 8'
-alt-shift-9 = 'move-node-to-workspace 9'
+ctrl-alt-shift-1 = 'move-node-to-workspace 1'
+ctrl-alt-shift-2 = 'move-node-to-workspace 2'
+ctrl-alt-shift-3 = 'move-node-to-workspace 3'
+ctrl-alt-shift-4 = 'move-node-to-workspace 4'
+ctrl-alt-shift-5 = 'move-node-to-workspace 5'
+ctrl-alt-shift-6 = 'move-node-to-workspace 6'
+ctrl-alt-shift-7 = 'move-node-to-workspace 7'
+ctrl-alt-shift-8 = 'move-node-to-workspace 8'
+ctrl-alt-shift-9 = 'move-node-to-workspace 9'
 
 # Move node to workspace
 cmd-shift-1 = 'move-node-to-workspace 1'
@@ -162,22 +167,23 @@ cmd-tab         = 'workspace-back-and-forth'
 cmd-shift-tab   = 'move-workspace-to-monitor --wrap-around next'
 
 # ── Monitors ──────────────────────────────────────────────────────────────────
-# alt is otherwise unused in this config, so these cannot clash with the cmd
-# bindings above or with macOS. Directions match the cmd-hjkl vim layout.
+# ctrl-alt is otherwise unused in this config, so these cannot clash with the
+# cmd bindings above, with macOS, or with German-layout Option characters (see
+# the note above the workspace bindings). Directions match the cmd-hjkl layout.
 # --focus-follows-window keeps focus on the window you just moved, rather than
 # leaving it behind on the old monitor.
 
 # Focus another monitor
-alt-h = 'focus-monitor --wrap-around left'
-alt-j = 'focus-monitor --wrap-around down'
-alt-k = 'focus-monitor --wrap-around up'
-alt-l = 'focus-monitor --wrap-around right'
+ctrl-alt-h = 'focus-monitor --wrap-around left'
+ctrl-alt-j = 'focus-monitor --wrap-around down'
+ctrl-alt-k = 'focus-monitor --wrap-around up'
+ctrl-alt-l = 'focus-monitor --wrap-around right'
 
 # Move the focused WINDOW to another monitor
-alt-shift-h = 'move-node-to-monitor --wrap-around --focus-follows-window left'
-alt-shift-j = 'move-node-to-monitor --wrap-around --focus-follows-window down'
-alt-shift-k = 'move-node-to-monitor --wrap-around --focus-follows-window up'
-alt-shift-l = 'move-node-to-monitor --wrap-around --focus-follows-window right'
+ctrl-alt-shift-h = 'move-node-to-monitor --wrap-around --focus-follows-window left'
+ctrl-alt-shift-j = 'move-node-to-monitor --wrap-around --focus-follows-window down'
+ctrl-alt-shift-k = 'move-node-to-monitor --wrap-around --focus-follows-window up'
+ctrl-alt-shift-l = 'move-node-to-monitor --wrap-around --focus-follows-window right'
 
 # Move the whole WORKSPACE to the next monitor (already existed)
 cmd-shift-semicolon = 'mode service'
