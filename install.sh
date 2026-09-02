@@ -26,7 +26,7 @@ SRC="$REPO_DIR/config"
 DEST="${XDG_CONFIG_HOME:-$HOME/.config}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
-ALL_COMPONENTS=(aerospace sketchybar borders)
+ALL_COMPONENTS=(aerospace sketchybar borders raycast)
 
 # Top gap used when AeroSpace is installed without SketchyBar (nothing to
 # clear, so it just matches the other outer gaps).
@@ -51,6 +51,8 @@ Components:
                config/borders/bordersrc
                Uses sketchybar/colors.sh for its palette when present,
                otherwise the same colours inlined in bordersrc.
+  raycast      Launcher (cask: raycast). App only -- its settings live in
+               your Raycast account, not in this repo.
 LIST
 }
 
@@ -119,6 +121,15 @@ want() {
   return 1
 }
 
+# Components that ship files under config/ in this repo. Others (raycast) are
+# app-only: installed via Homebrew, configured in the app itself.
+has_config() {
+  case "$1" in
+    aerospace|sketchybar|borders) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 step() { printf '\n==> %s\n' "$*"; }
 info() { printf '    %s\n' "$*"; }
 warn() { printf '    !! %s\n' "$*" >&2; }
@@ -172,6 +183,7 @@ else
   fi
 
   want borders && brew_formula felixkratz/formulae/borders
+  want raycast && brew_cask raycast
 fi
 
 # ── 2. Configs ────────────────────────────────────────────────────────────────
@@ -185,6 +197,7 @@ if want aerospace && [ -e "$HOME/.aerospace.toml" ]; then
 fi
 
 for rel in "${COMPONENTS[@]}"; do
+  has_config "$rel" || { info "$rel: app only, nothing to place"; continue; }
   [ -d "$SRC/$rel" ] || { warn "missing in repo: config/$rel -- skipping"; continue; }
 
   if [ -e "$DEST/$rel" ]; then
@@ -232,6 +245,13 @@ else
   step "Starting services"
   want sketchybar && run brew services restart sketchybar
   want borders    && run brew services restart borders
+  if want raycast; then
+    if [ -d "/Applications/Raycast.app" ]; then
+      run open -a Raycast
+    else
+      warn "Raycast.app not found in /Applications"
+    fi
+  fi
   if want aerospace; then
     if [ -d "/Applications/AeroSpace.app" ]; then
       run open -a AeroSpace
@@ -280,6 +300,11 @@ want aerospace && cat <<'NOTE'
         AeroSpace cannot start its server without it.
       * aerospace.toml pins monitor names ("built-in") and a per-monitor
         gap tuned for the machine it came from. Adjust for a different setup.
+NOTE
+want raycast && cat <<'NOTE'
+      * Raycast: sign in to sync your settings, and set its hotkey
+        (Settings > General). Grant Accessibility if prompted.
+        Its configuration is not versioned in this repo.
 NOTE
 want sketchybar && cat <<'NOTE'
       * Auto-hide the macOS menu bar, or the bar will overlap it:

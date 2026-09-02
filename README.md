@@ -32,11 +32,13 @@ All three components install by default. Pick a subset:
 ./install.sh --skip aerospace          # everything except the WM
 ```
 
+Components: `aerospace`, `sketchybar`, `borders`, `raycast`.
+
 | flag | effect |
 |---|---|
 | `--only <list>` | install only these components |
 | `--skip <list>` | install everything except these |
-| `--aerospace` / `--sketchybar` / `--borders` | shorthand for `--only` |
+| `--aerospace` / `--sketchybar` / `--borders` / `--raycast` | shorthand for `--only` |
 | `--list` | show the components and what each pulls in |
 | `--dry-run` | print everything, change nothing |
 | `--no-deps` | skip Homebrew, only place configs and restart services |
@@ -44,7 +46,10 @@ All three components install by default. Pick a subset:
 
 Each component carries its own dependencies (`aerospace` → the cask;
 `sketchybar` → the formula, Nerd Font, `blueutil`, `jq`; `borders` → the
-formula), so a partial install only pulls what it needs.
+formula; `raycast` → the cask), so a partial install only pulls what it needs.
+
+`raycast` is **app-only**: it installs the launcher but places no files, because
+Raycast keeps its settings in your Raycast account rather than on disk.
 
 **Two cross-dependencies**, both handled automatically:
 
@@ -130,3 +135,4 @@ Installed by `install.sh`:
 - `blueutil` — Bluetooth picker
 - `font-jetbrains-mono-nerd-font` (cask) — the bar's glyphs
 - `jq` — used by several plugins (macOS ships one at `/usr/bin/jq`)
+- `raycast` (cask) — launcher
