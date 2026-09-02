@@ -128,6 +128,25 @@ Two requirements:
   GitHub, Jira) no longer receive it. Change the binding to `alt-enter` in
   `aerospace.toml` to get it back — `alt` is otherwise unused.
 
+## Keybindings — workspaces
+
+| keys | action |
+|---|---|
+| `alt` + `1`…`9` | switch to workspace N |
+| `alt+shift` + `1`…`9` | move focused window to workspace N |
+| `cmd` + `1`…`9` | same, but **fails inside Chromium apps** |
+| `cmd+shift` + `1`…`9` | same |
+
+Chromium-based apps — Brave, WhatsApp, Electron apps generally — intercept
+`cmd-1`…`8` for their own tab switching *before* AeroSpace's global hotkey sees
+it, so `cmd-N` silently does nothing while one of them is focused. `alt-N` is
+claimed by nothing and always works; it is also AeroSpace's upstream default,
+for exactly this reason.
+
+The `cmd-N` bindings are kept because they still work everywhere else, and
+inside Chromium `cmd-N` now usefully falls through to tab switching. Delete them
+from `aerospace.toml` if you would rather have one way of doing it.
+
 ## Keybindings — focus
 
 `cmd` + `h/j/k/l` focuses the window in that direction, and **crosses monitor
