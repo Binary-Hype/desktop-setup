@@ -1,0 +1,219 @@
+config-version = 2
+
+# Keep these workspaces alive even when empty
+# the actual wanted behaviour is that when you close all windows on a workspace
+# it only closes when switching to another workspace.
+# see https://github.com/nikitabobko/AeroSpace/discussions/964
+#persistent-workspaces = ['1', '2', '3', '4', '5']
+
+after-login-command = []
+
+after-startup-command = [
+  'exec-and-forget borders',
+  'exec-and-forget sketchybar'
+]
+
+start-at-login = true
+
+# Reload automatically when this file is saved.
+auto-reload-config = true
+
+# Normalizations. See: https://nikitabobko.github.io/AeroSpace/guide#normalization
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+
+# See: https://nikitabobko.github.io/AeroSpace/guide#layouts
+accordion-padding = 30
+
+default-root-container-layout = 'tiles'
+
+# 'auto' = wide monitor → horizontal, tall monitor → vertical
+default-root-container-orientation = 'auto'
+
+key-mapping.preset = 'qwerty'
+
+# Mouse follows focus when focused monitor changes
+on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
+
+# Notify SketchyBar on every focus change so spaces + front_app stay in sync
+on-focus-changed = [
+  'move-mouse window-lazy-center',
+  'exec-and-forget sketchybar --trigger aerospace_workspace_change'
+]
+
+# # Notify SketchyBar when workspace changes (updates space highlights)
+# exec-on-workspace-change = [
+#   '/bin/bash', '-c',
+#   'sketchybar --trigger aerospace_workspace_change'
+# ]
+#
+# Notify Sketchybar about workspace change
+exec-on-workspace-change = ['/bin/bash', '-c',
+    'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'
+]
+
+# ── Gaps ─────────────────────────────────────────────────────────────────────
+# outer.top   = SketchyBar height (check with: sketchybar --query bar | grep height)
+# outer.bottom is already small; if the bottom still looks empty, the macOS
+# Dock is the culprit — auto-hide it via System Settings → Dock → Auto-hide.
+[gaps]
+inner.horizontal = 6
+inner.vertical   = 6
+outer.left       = 6
+outer.right      = 6
+# Derived from the SketchyBar geometry in ~/.config/sketchybar/variables.sh:
+#   BAR_Y_OFFSET (4) + BAR_HEIGHT (35) = 39pt of bar, + 1pt gap = 40.
+# Change either of those and this number has to follow.
+#
+# Per monitor: SketchyBar draws from the physical top of the screen, but
+# AeroSpace measures outer.top from the display's usable area -- and the
+# built-in Retina display's usable area already starts 28pt down (notch /
+# safe-area inset), while both externals start at 0.
+# 40 - 28 = 12 for the built-in; 40 everywhere else.
+# Pattern is unanchored and spelled to match whether or not AeroSpace's
+# monitor regex is case-sensitive; it cannot collide with "MPG321UR-QD"
+# or "LG ULTRAFINE".
+outer.top        = [{ monitor."[Bb]uilt-[Ii]n" = 12 }, 40]
+outer.bottom     = 6
+
+
+# ── Main bindings ─────────────────────────────────────────────────────────────
+[mode.main.binding]
+
+cmd-slash = 'layout tiles horizontal vertical'
+cmd-comma = 'layout accordion horizontal vertical'
+
+# Focus
+cmd-h = 'focus left'
+cmd-j = 'focus down'
+cmd-k = 'focus up'
+cmd-l = 'focus right'
+
+# Move
+cmd-shift-h = 'move left'
+cmd-shift-j = 'move down'
+cmd-shift-k = 'move up'
+cmd-shift-l = 'move right'
+
+# Workspaces
+cmd-1 = 'workspace 1'
+cmd-2 = 'workspace 2'
+cmd-3 = 'workspace 3'
+cmd-4 = 'workspace 4'
+cmd-5 = 'workspace 5'
+cmd-6 = 'workspace 6'
+cmd-7 = 'workspace 7'
+cmd-8 = 'workspace 8'
+cmd-9 = 'workspace 9'
+
+# Move node to workspace
+cmd-shift-1 = 'move-node-to-workspace 1'
+cmd-shift-2 = 'move-node-to-workspace 2'
+cmd-shift-3 = 'move-node-to-workspace 3'
+cmd-shift-4 = 'move-node-to-workspace 4'
+cmd-shift-5 = 'move-node-to-workspace 5'
+cmd-shift-6 = 'move-node-to-workspace 6'
+cmd-shift-7 = 'move-node-to-workspace 7'
+cmd-shift-8 = 'move-node-to-workspace 8'
+cmd-shift-9 = 'move-node-to-workspace 9'
+
+cmd-shift-f     = 'fullscreen'
+cmd-shift-q     = 'close --quit-if-last-window'
+cmd-shift-space = 'layout floating tiling'
+cmd-tab         = 'workspace-back-and-forth'
+cmd-shift-tab   = 'move-workspace-to-monitor --wrap-around next'
+
+cmd-shift-semicolon = 'mode service'
+cmd-r        = 'mode resize'
+
+
+# ── Resize mode ───────────────────────────────────────────────────────────────
+[mode.resize.binding]
+h     = 'resize width -50'
+j     = 'resize height +50'
+k     = 'resize height -50'
+l     = 'resize width +50'
+b     = 'balance-sizes'
+minus = 'resize smart -50'
+equal = 'resize smart +50'
+enter = 'mode main'
+esc   = 'mode main'
+
+
+# ── Service mode ──────────────────────────────────────────────────────────────
+[mode.service.binding]
+esc       = ['reload-config', 'mode main']
+r         = ['flatten-workspace-tree', 'mode main']
+f         = ['layout floating tiling', 'mode main']
+backspace = ['close-all-windows-but-current', 'mode main']
+
+cmd-shift-h = ['join-with left',  'mode main']
+cmd-shift-j = ['join-with down',  'mode main']
+cmd-shift-k = ['join-with up',    'mode main']
+cmd-shift-l = ['join-with right', 'mode main']
+
+
+# ── Window rules ──────────────────────────────────────────────────────────────
+[[on-window-detected]]
+if.app-id = 'com.kagi.kagimacOS'
+run = "move-node-to-workspace 2"
+
+[[on-window-detected]]
+if.app-id = 'com.microsoft.VSCode'
+run = "move-node-to-workspace D"
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Music'
+run = "move-node-to-workspace M"
+
+[[on-window-detected]]
+if.app-id = 'net.whatsapp.WhatsApp'
+run = "move-node-to-workspace W"
+
+[[on-window-detected]]
+if.app-id = 'com.electron.dockerdesktop'
+run = "move-node-to-workspace C"
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Preview'
+run = "move-node-to-workspace E"
+
+[[on-window-detected]]
+if.app-id = 'md.obsidian'
+run = 'move-node-to-workspace D'
+
+[[on-window-detected]]
+if.app-id = 'com.microsoft.teams2'
+run = "move-node-to-workspace 3"
+
+# Floating windows
+[[on-window-detected]]
+if.app-id = 'com.macpaw.CleanMyMac4'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Passwords'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.cisco.anyconnect.gui'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'qemu-system-x86_64'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'net.kovidgoyal.kitty'
+if.window-title-regex-substring = 'pop-up'
+run = 'layout floating'
+
+
+# ── German QWERTZ ─────────────────────────────────────────────────────────────
+# AeroSpace has no 'qwertz' preset -- valid values are only qwerty|dvorak|colemak
+# (setting 'qwertz' is a parse error and stops the config loading entirely).
+# The documented equivalent is the qwerty preset above plus this y/z swap, so
+# key notation matches the physical German layout.
+[key-mapping.key-notation-to-key-code]
+y = 'z'
+z = 'y'

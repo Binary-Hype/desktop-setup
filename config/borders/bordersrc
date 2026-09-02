@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Static version of the repo's pywal-generated bordersrc.
+# Colours come from the sketchybar palette so bar + borders stay in sync.
+source "$HOME/.config/sketchybar/colors.sh"
+
+options=(
+    style=round
+    width=3.0
+    hidpi=off
+    active_color="$BORDER_ACTIVE_COLOR"
+    inactive_color="$BORDER_INACTIVE_COLOR"
+)
+
+borders "${options[@]}"
