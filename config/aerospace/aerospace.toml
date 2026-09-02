@@ -129,6 +129,25 @@ cmd-shift-space = 'layout floating tiling'
 cmd-tab         = 'workspace-back-and-forth'
 cmd-shift-tab   = 'move-workspace-to-monitor --wrap-around next'
 
+# ── Monitors ──────────────────────────────────────────────────────────────────
+# alt is otherwise unused in this config, so these cannot clash with the cmd
+# bindings above or with macOS. Directions match the cmd-hjkl vim layout.
+# --focus-follows-window keeps focus on the window you just moved, rather than
+# leaving it behind on the old monitor.
+
+# Focus another monitor
+alt-h = 'focus-monitor --wrap-around left'
+alt-j = 'focus-monitor --wrap-around down'
+alt-k = 'focus-monitor --wrap-around up'
+alt-l = 'focus-monitor --wrap-around right'
+
+# Move the focused WINDOW to another monitor
+alt-shift-h = 'move-node-to-monitor --wrap-around --focus-follows-window left'
+alt-shift-j = 'move-node-to-monitor --wrap-around --focus-follows-window down'
+alt-shift-k = 'move-node-to-monitor --wrap-around --focus-follows-window up'
+alt-shift-l = 'move-node-to-monitor --wrap-around --focus-follows-window right'
+
+# Move the whole WORKSPACE to the next monitor (already existed)
 cmd-shift-semicolon = 'mode service'
 cmd-r        = 'mode resize'
 

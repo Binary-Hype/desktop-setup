@@ -122,6 +122,20 @@ Two requirements:
   GitHub, Jira) no longer receive it. Change the binding to `alt-enter` in
   `aerospace.toml` to get it back — `alt` is otherwise unused.
 
+## Keybindings — monitors
+
+| keys | action |
+|---|---|
+| `alt` + `h/j/k/l` | focus the monitor in that direction |
+| `alt+shift` + `h/j/k/l` | move the focused **window** to that monitor |
+| `cmd+shift+tab` | move the whole **workspace** to the next monitor |
+
+All wrap around. The window moves keep focus on the window you moved
+(`--focus-follows-window`) rather than leaving it on the old monitor.
+
+`alt` is used for nothing else in this config, so these cannot collide with the
+`cmd` bindings or with macOS.
+
 ## Machine-specific values
 
 Two things are tuned per machine and will likely need adjusting:
