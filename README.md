@@ -78,6 +78,7 @@ script). It copies **one way**: system → repo. `install.sh` goes the other way
 
 ```
 config/aerospace/aerospace.toml   workspaces, keybindings, gaps, window rules
+config/aerospace/scripts/         helpers invoked by keybindings
 config/borders/bordersrc          border width + colours (sources colors.sh)
 config/sketchybar/
   sketchybarrc                    bar layout
@@ -89,6 +90,28 @@ config/sketchybar/
 
 `colors.sh` is the single source of truth for colour. `bordersrc` sources it,
 so recolouring the bar recolours the window borders too.
+
+## cmd+enter — new terminal window
+
+`cmd-enter` opens a new Warp window **on the workspace you are currently on**
+(the Omarchy `Super+Enter` habit), via
+`config/aerospace/scripts/new-warp-window.sh`.
+
+It works by activating Warp and sending `Cmd+N`, because Warp offers no other
+way in: the `warp://action/new_window` deep link is accepted and ignored,
+AppleScript `make new window` fails with `-2710` (no `NSAppleScriptEnabled`),
+the bundled `oz` CLI only drives the agent, and `open -n -a Warp` starts a
+whole second Warp instance on every press. Activating Warp focuses its existing
+window — possibly on another workspace, dragging focus along — so the script
+records the workspace first and moves the new window back.
+
+Two requirements:
+
+- **`/usr/bin/osascript` needs Accessibility** (System Settings > Privacy &
+  Security > Accessibility), or the keystroke is silently dropped.
+- **It captures `Cmd+Return` globally.** Apps that use it to send (Slack,
+  GitHub, Jira) no longer receive it. Change the binding to `alt-enter` in
+  `aerospace.toml` to get it back — `alt` is otherwise unused.
 
 ## Machine-specific values
 

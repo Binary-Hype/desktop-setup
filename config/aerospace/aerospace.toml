@@ -80,6 +80,12 @@ outer.bottom     = 6
 # ── Main bindings ─────────────────────────────────────────────────────────────
 [mode.main.binding]
 
+# New Warp window on the CURRENT workspace (Omarchy's Super+Enter).
+# Wrapped in bash -c so $HOME expands -- the path must not be hardcoded.
+# NOTE: this captures Cmd+Return globally, so it no longer reaches apps that
+# use it to send (Slack, GitHub, Jira). Change to alt-enter to get it back.
+cmd-enter = 'exec-and-forget /bin/bash -c "$HOME/.config/aerospace/scripts/new-warp-window.sh"'
+
 cmd-slash = 'layout tiles horizontal vertical'
 cmd-comma = 'layout accordion horizontal vertical'
 

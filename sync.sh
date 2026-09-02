@@ -29,6 +29,7 @@ done
 # What we track. Anything not listed here is intentionally left alone.
 TRACKED=(
   "aerospace/aerospace.toml"
+  "aerospace/scripts"
   "borders/bordersrc"
   "sketchybar/sketchybarrc"
   "sketchybar/colors.sh"

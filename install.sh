@@ -215,6 +215,9 @@ if ! $DRY_RUN; then
     chmod +x "$DEST/sketchybar/sketchybarrc" 2>/dev/null || true
   fi
   want borders && chmod +x "$DEST/borders/bordersrc" 2>/dev/null || true
+  if want aerospace && [ -d "$DEST/aerospace/scripts" ]; then
+    find "$DEST/aerospace/scripts" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+  fi
 fi
 
 # ── 2b. Adapt gaps.outer.top when there is no bar ─────────────────────────────
@@ -300,6 +303,9 @@ want aerospace && cat <<'NOTE'
         AeroSpace cannot start its server without it.
       * aerospace.toml pins monitor names ("built-in") and a per-monitor
         gap tuned for the machine it came from. Adjust for a different setup.
+      * cmd-enter opens a new Warp window via scripts/new-warp-window.sh,
+        which sends Cmd+N through System Events. Grant /usr/bin/osascript
+        Accessibility, or that binding does nothing.
 NOTE
 want raycast && cat <<'NOTE'
       * Raycast: sign in to sync your settings, and set its hotkey
