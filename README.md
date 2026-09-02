@@ -128,6 +128,15 @@ Two requirements:
   GitHub, Jira) no longer receive it. Change the binding to `alt-enter` in
   `aerospace.toml` to get it back — `alt` is otherwise unused.
 
+## Keybindings — focus
+
+`cmd` + `h/j/k/l` focuses the window in that direction, and **crosses monitor
+edges**. That is not AeroSpace's default: normally focus is confined to the
+current workspace, so on a workspace holding a single window the keys do
+nothing at all and the only way out is the mouse. The bindings pass
+`--boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors`
+to lift that.
+
 ## Keybindings — monitors
 
 | keys | action |

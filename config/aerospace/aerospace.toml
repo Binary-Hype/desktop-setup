@@ -90,10 +90,16 @@ cmd-slash = 'layout tiles horizontal vertical'
 cmd-comma = 'layout accordion horizontal vertical'
 
 # Focus
-cmd-h = 'focus left'
-cmd-j = 'focus down'
-cmd-k = 'focus up'
-cmd-l = 'focus right'
+# --boundaries all-monitors-outer-frame lets focus cross monitor edges. Without
+# it AeroSpace confines focus to the current workspace, so on a workspace
+# holding a single window (Brave, WhatsApp) these keys did nothing at all and
+# the only way out was the mouse.
+# wrap-around-all-monitors then makes the outermost edge roll over to the far
+# side rather than dead-ending.
+cmd-h = 'focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors left'
+cmd-j = 'focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors down'
+cmd-k = 'focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors up'
+cmd-l = 'focus --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors right'
 
 # Move
 cmd-shift-h = 'move left'
