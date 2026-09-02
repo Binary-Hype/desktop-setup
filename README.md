@@ -48,8 +48,9 @@ formula), so a partial install only pulls what it needs.
 
 **Two cross-dependencies**, both handled automatically:
 
-- `bordersrc` reads its palette from `sketchybar/colors.sh`. Installing
-  `borders` without `sketchybar` warns if that file is not already present.
+- `bordersrc` reads its palette from `sketchybar/colors.sh` when present, so
+  recolouring the bar recolours the borders. Without it, it falls back to the
+  same colours inlined in `bordersrc`, so `borders` works standalone.
 - `gaps.outer.top` in `aerospace.toml` reserves vertical room for the bar
   (`BAR_Y_OFFSET + BAR_HEIGHT + gap`). Installed **without** sketchybar that
   would be ~40pt of dead space above every window, so `install.sh` rewrites it

@@ -49,7 +49,8 @@ Components:
                config/sketchybar/
   borders      JankyBorders window outlines (formula)
                config/borders/bordersrc
-               NOTE: bordersrc sources sketchybar/colors.sh for its palette.
+               Uses sketchybar/colors.sh for its palette when present,
+               otherwise the same colours inlined in bordersrc.
 LIST
 }
 
@@ -127,11 +128,10 @@ run()  { if $DRY_RUN; then info "would run: $*"; else "$@"; fi; }
 $DRY_RUN && echo "(dry run -- nothing will be changed)"
 echo "Components: ${COMPONENTS[*]}"
 
-# borders takes its palette from sketchybar's colors.sh. Installing it alone is
-# fine only if that file is already on the machine.
+# borders prefers sketchybar's colors.sh so the two stay in sync, but falls
+# back to the same colours inlined in bordersrc when it is absent.
 if want borders && ! want sketchybar && [ ! -f "$DEST/sketchybar/colors.sh" ]; then
-  warn "borders sources $DEST/sketchybar/colors.sh, which is not present."
-  warn "Install sketchybar too, or borders will fail to start."
+  info "No sketchybar/colors.sh here -- borders will use its built-in palette."
 fi
 
 brew_tap() {

@@ -1,8 +1,18 @@
 #!/bin/bash
 
-# Static version of the repo's pywal-generated bordersrc.
-# Colours come from the sketchybar palette so bar + borders stay in sync.
-source "$HOME/.config/sketchybar/colors.sh"
+# JankyBorders configuration.
+#
+# The palette normally comes from SketchyBar's colors.sh, so the bar and the
+# window borders stay in sync -- recolouring one recolours the other. On a
+# machine where SketchyBar is not installed, the inline defaults below apply
+# instead (same colours), so borders works standalone.
+
+PALETTE="${XDG_CONFIG_HOME:-$HOME/.config}/sketchybar/colors.sh"
+[ -f "$PALETTE" ] && source "$PALETTE"
+
+# Only used if colors.sh was absent, or predates these two roles.
+: "${BORDER_ACTIVE_COLOR:=0xff00ff9c}"    # focused window   -> bright green
+: "${BORDER_INACTIVE_COLOR:=0x00000000}"  # unfocused        -> transparent
 
 options=(
     style=round
