@@ -18,12 +18,37 @@ cd ~/Projects/desktop-setup
 Then do the manual steps it prints — the important one is granting **AeroSpace
 Accessibility permission**, without which it cannot start.
 
+Existing configs are moved to `<name>.backup-<timestamp>`, never overwritten.
+
+### Installing only parts
+
+All three components install by default. Pick a subset:
+
+```bash
+./install.sh --list                    # show components
+./install.sh --only sketchybar         # just the bar
+./install.sh --only=aerospace,borders  # comma-separated also works
+./install.sh --sketchybar --borders    # or name them directly
+./install.sh --skip aerospace          # everything except the WM
+```
+
 | flag | effect |
 |---|---|
+| `--only <list>` | install only these components |
+| `--skip <list>` | install everything except these |
+| `--aerospace` / `--sketchybar` / `--borders` | shorthand for `--only` |
+| `--list` | show the components and what each pulls in |
 | `--dry-run` | print everything, change nothing |
 | `--no-deps` | skip Homebrew, only place configs and restart services |
+| `--no-services` | place configs but start nothing |
 
-Existing configs are moved to `<name>.backup-<timestamp>`, never overwritten.
+Each component carries its own dependencies (`aerospace` → the cask;
+`sketchybar` → the formula, Nerd Font, `blueutil`, `jq`; `borders` → the
+formula), so a partial install only pulls what it needs.
+
+**One cross-dependency:** `bordersrc` reads its palette from
+`sketchybar/colors.sh`. Installing `borders` without `sketchybar` warns if that
+file is not already present.
 
 ## Update the repo from this machine
 
