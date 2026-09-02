@@ -97,13 +97,22 @@ so recolouring the bar recolours the window borders too.
 (the Omarchy `Super+Enter` habit), via
 `config/aerospace/scripts/new-warp-window.sh`.
 
-It works by activating Warp and sending `Cmd+N`, because Warp offers no other
-way in: the `warp://action/new_window` deep link is accepted and ignored,
-AppleScript `make new window` fails with `-2710` (no `NSAppleScriptEnabled`),
-the bundled `oz` CLI only drives the agent, and `open -n -a Warp` starts a
-whole second Warp instance on every press. Activating Warp focuses its existing
-window — possibly on another workspace, dragging focus along — so the script
-records the workspace first and moves the new window back.
+Warp offers no scriptable way in: the `warp://action/new_window` deep link is
+accepted and ignored, AppleScript `make new window` fails with `-2710` (no
+`NSAppleScriptEnabled`), the bundled `oz` CLI only drives the agent, and
+`open -n -a Warp` starts a whole second Warp instance on every press.
+
+So the script clicks **File > New Window** through the Accessibility API. That
+takes ~150ms and never brings Warp forward — which matters, because activating
+Warp focuses its existing window and drags AeroSpace onto whatever workspace
+that window lives on. A fallback to activate-and-send-`Cmd+N` remains in case
+the menu layout changes, and the workspace is restored afterwards if focus did
+move.
+
+Roughly 0.30s end to end, down from 0.67s for the activate-and-type approach.
+The remaining cost is one `osascript` launch (~150ms) plus two AeroSpace CLI
+calls; the two startup queries are batched into a single `aerospace eval`,
+since each CLI invocation costs ~34ms.
 
 Two requirements:
 
