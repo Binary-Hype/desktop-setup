@@ -38,10 +38,14 @@ export ITEM_PADDING_LEFT=7
 export ITEM_PADDING_RIGHT=7
 
 # --- Fonts --------------------------------------------------------------------
-# font-family: 'JetBrainsMono Nerd Font'; font-size: 12px -- 13pt matches that
-# optically at macOS' point scale.
-export ICON_FONT="JetBrainsMono Nerd Font:Regular:13.0"
-export LABEL_FONT="JetBrainsMono Nerd Font:Regular:13.0"
+# Cascadia Code NF -- the Nerd Font build, so the bar's glyphs come from the
+# same family as its text. Omarchy uses JetBrainsMono Nerd Font at 12px; 13pt
+# matches that optically at macOS' point scale.
+export BAR_FONT="Cascadia Code NF"
+# Icons run larger than the text: Cascadia's Nerd Font patch draws its glyphs
+# noticeably smaller than JetBrainsMono's at the same point size.
+export ICON_FONT="$BAR_FONT:Regular:16.0"
+export LABEL_FONT="$BAR_FONT:Regular:13.0"
 export ICON_PADDING_LEFT=0
 export ICON_PADDING_RIGHT=0
 export ICON_DRAWING="on"

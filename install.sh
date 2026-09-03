@@ -45,7 +45,7 @@ list_components() {
 Components:
   aerospace    Tiling window manager (cask: nikitabobko/tap/aerospace)
                config/aerospace/aerospace.toml
-  sketchybar   Status bar (formula + JetBrainsMono Nerd Font, blueutil,
+  sketchybar   Status bar (formula + Cascadia Code NF, blueutil,
                switchaudio-osx, jq)
                config/sketchybar/
   borders      JankyBorders window outlines (formula)
@@ -201,7 +201,7 @@ else
     brew_formula felixkratz/formulae/sketchybar
     brew_formula blueutil                       # Bluetooth menu
     brew_formula switchaudio-osx                # output devices in the sound menu
-    brew_cask font-jetbrains-mono-nerd-font     # the bar's glyphs
+    brew_cask font-cascadia-code-nf             # the bar's text and glyphs
     command -v jq >/dev/null 2>&1 || run brew install jq
   fi
 

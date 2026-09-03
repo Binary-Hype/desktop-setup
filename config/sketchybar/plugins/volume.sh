@@ -155,7 +155,7 @@ case "$1" in
 esac
 
 case "$SENDER" in
-"mouse.exited.global" | "display_change" | "space_change")
+"mouse.exited.global" | "display_change")
   menu_close volume
   ;;
 "mouse.clicked")

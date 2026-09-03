@@ -303,6 +303,9 @@ Installed by `install.sh`:
 - `blueutil` — acting on Bluetooth devices in the bluetooth menu
 - `switchaudio-osx` — output device switching in the volume menu (optional:
   without it the menu simply drops its "Ausgabe" section)
-- `font-jetbrains-mono-nerd-font` (cask) — the bar's glyphs
+- `font-cascadia-code-nf` (cask) — the bar's text and glyphs. The Nerd Font
+  build, so icons come from the same family as the text; its glyphs are drawn
+  smaller than JetBrainsMono's, which is why `ICON_FONT` runs 3pt above
+  `LABEL_FONT`
 - `jq` — used by several plugins (macOS ships one at `/usr/bin/jq`)
 - `raycast` (cask) — launcher

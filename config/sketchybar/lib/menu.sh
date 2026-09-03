@@ -49,9 +49,11 @@ menu_item() {
           # for a screenshot hotkey, which made an open menu impossible to
           # capture. display_change/space_change: popup rows are bound to the
           # display they were built on, so dismiss rather than strand an empty
-          # frame on the monitor we just moved to.
-          --subscribe "$name" mouse.clicked mouse.exited.global \
-                              display_change space_change )
+          # frame on the monitor we just moved to. space_change is NOT used:
+          # AeroSpace does not use macOS Spaces, and macOS fires it for the
+          # screenshot overlay -- which closed every menu before it could be
+          # captured.
+          --subscribe "$name" mouse.clicked mouse.exited.global display_change )
 }
 
 # menu_row PARENT NAME -- a clickable entry. Hidden until a plugin fills it.
@@ -96,7 +98,7 @@ menu_header() {
               label.align=left
               label.padding_left=12
               "label.color=$color3"
-              "label.font=JetBrainsMono Nerd Font:Bold:10.0"
+              "label.font=$BAR_FONT:Bold:10.0"
               background.drawing=on
               "background.color=$MENU_ROW_BG_IDLE"
               background.height=20 )

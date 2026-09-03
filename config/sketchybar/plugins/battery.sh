@@ -18,10 +18,12 @@ read_battery() {
   PERCENT=$(printf '%s' "$line" | grep -Eo '[0-9]+%' | head -1 | tr -d '%')
   REMAINING=$(printf '%s' "$line" | grep -Eo '[0-9]+:[0-9]{2}' | head -1)
   [ "$REMAINING" = "0:00" ] && REMAINING=""
+  # Order matters: pmset says "discharging", which also matches *charging*.
   case "$line" in
-    *charged*)  STATE=charged ;;
-    *charging*) STATE=charging ;;
-    *)          STATE=discharging ;;
+    *discharging*) STATE=discharging ;;
+    *charged*)     STATE=charged ;;
+    *charging*)    STATE=charging ;;
+    *)             STATE=discharging ;;
   esac
 }
 
@@ -102,7 +104,7 @@ case "$1" in
 esac
 
 case "$SENDER" in
-"mouse.exited.global" | "display_change" | "space_change")
+"mouse.exited.global" | "display_change")
   menu_close battery
   ;;
 "mouse.clicked")
