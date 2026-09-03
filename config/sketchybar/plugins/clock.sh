@@ -16,9 +16,12 @@ populate() {
   ARGS=()
   ARGS+=( --set clock.date label="$(date '+%d.%m.%Y')" )
 
+  # `cal` pads its output with a trailing blank line; skip empty rows so the
+  # popup's bottom spacing comes from clock.pad_bottom alone.
   local i=0 line
   while IFS= read -r line; do
     [ "$i" -ge "$CAL_ROWS" ] && break
+    [ -z "${line// /}" ] && continue
     ARGS+=( --set "clock.cal.$i" drawing=on "label=$line" )
     i=$((i + 1))
   done < <(cal)

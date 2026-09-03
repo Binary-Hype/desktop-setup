@@ -12,6 +12,19 @@ CLOCK_POPUP_WIDTH=$MENU_WIDTH
 menu_item clock right right
 ARGS+=( --set clock update_freq=10 icon.drawing=off )
 
+# Blank rows top and bottom. A popup row's height comes from its font, so an
+# item with nothing drawn is the way to keep the clock off the popup border.
+spacer() {
+  ARGS+=( --add item "$1" popup.clock
+          --set "$1"
+              "width=$CLOCK_POPUP_WIDTH"
+              icon.drawing=off
+              label.drawing=off
+              background.drawing=off )
+}
+
+spacer clock.pad_top
+
 # Big clock, ticking once a second while the popup is open.
 ARGS+=( --add item clock.time popup.clock
         --set clock.time
@@ -55,6 +68,8 @@ for i in $(seq 0 7); do
               "label.color=$ITEM_COLOR"
               "label.font=Menlo:Regular:12.0" )
 done
+
+spacer clock.pad_bottom
 
 menu_flush
 
