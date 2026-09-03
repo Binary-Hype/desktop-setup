@@ -27,8 +27,15 @@ populate() {
   menu_flush
 }
 
+case "$1" in
+"populate")
+  populate
+  exit 0
+  ;;
+esac
+
 case "$SENDER" in
-"display_change" | "space_change")
+"mouse.exited.global" | "front_app_switched" | "display_change" | "space_change")
   menu_close clock
   ;;
 "mouse.clicked")
@@ -40,6 +47,6 @@ case "$SENDER" in
   fi
   ;;
 *)
-  sketchybar --set "$NAME" label="$(date '+%A %H:%M')"
+  sketchybar --set "${NAME:-clock}" label="$(date '+%A %H:%M')"
   ;;
 esac

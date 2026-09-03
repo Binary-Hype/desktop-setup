@@ -117,6 +117,10 @@ the only click in the whole bar that still opens a window.
 | `󰁹` battery | charge, power source, and lock / sleep / restart / shut down |
 | clock | large clock, date, month grid |
 
+A menu closes when you click it again, when the pointer leaves the bar and all
+its rows (`mouse.exited.global`), when another app takes focus
+(`front_app_switched`), and on a display or workspace change.
+
 Two macOS limitations shape what those can show:
 
 - **Wi-Fi names are redacted.** Since macOS 15 the SSID is hidden from any
@@ -244,17 +248,22 @@ the built-in display needs a **smaller** value — by exactly that inset:
 outer.top = BAR_Y_OFFSET + BAR_HEIGHT + desired_gap - display_top_inset
 ```
 
-With the current flat 26pt bar that is `0 + 26 + 1 - 32 = negative` on this
-MacBook, i.e. the built-in display needs **no** extra gap: the bar fits entirely
-inside the notch inset. Externals get `27`.
+With the current flat 29pt bar that is `0 + 29 + 3 - 32 = 0` on this MacBook,
+i.e. the built-in display needs **no** extra gap: the bar sits inside the notch
+inset and leaves exactly the 3pt every other edge gets. Externals get `32`.
+
+That 29 is also why the bar is not Omarchy's 26: AeroSpace cannot place a
+window above the 32pt inset, so a 26pt bar leaves a 6pt gap below it that no
+gap setting can close. 29 brings it down to 3.
 
 `install.sh` prints the real inset for each display. Note it also changes
 depending on whether the built-in is the *main* display (menu bar present) or a
 secondary one.
 
-Windows sit flush against the left, right and bottom screen edges
-(`outer.left/right/bottom = 0`); only `inner.*` and `outer.top` add space, so
-the gaps are between windows and toward the bar.
+Every gap is sized off the JankyBorders width (`3.0` in `borders/bordersrc`):
+a window flush against a screen edge has its border clipped, so the outer gaps
+are exactly one border wide and the inner ones two — both neighbours draw their
+own.
 
 **2. Monitor names.** The per-monitor rule matches `[Bb]uilt-[Ii]n`. A
 non-matching pattern falls back silently to the default value, so if the gap

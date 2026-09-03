@@ -167,7 +167,7 @@ case "$1" in
 esac
 
 case "$SENDER" in
-"display_change" | "space_change")
+"mouse.exited.global" | "front_app_switched" | "display_change" | "space_change")
   menu_close network
   ;;
 "mouse.clicked")

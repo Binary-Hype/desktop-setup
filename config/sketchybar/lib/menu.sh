@@ -42,10 +42,14 @@ menu_item() {
               "popup.background.corner_radius=$MENU_BG_CORNER_RADIUS"
               "popup.background.border_width=$MENU_BG_BORDER_WIDTH"
               "popup.background.border_color=$ACCENT_COLOR"
-          # display_change/space_change: popup rows are bound to the display
-          # they were built on, so dismiss rather than strand an empty frame on
-          # the monitor we just moved to.
-          --subscribe "$name" mouse.clicked display_change space_change )
+          # mouse.exited.global fires once the pointer has left the bar AND
+          # every popup row, which is the closest thing sketchybar offers to
+          # "clicked somewhere else"; front_app_switched covers clicking into
+          # another window. display_change/space_change: popup rows are bound
+          # to the display they were built on, so dismiss rather than strand an
+          # empty frame on the monitor we just moved to.
+          --subscribe "$name" mouse.clicked mouse.exited.global \
+                              front_app_switched display_change space_change )
 }
 
 # menu_row PARENT NAME -- a clickable entry. Hidden until a plugin fills it.

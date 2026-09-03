@@ -8,9 +8,15 @@
 # ~/.config/borders/bordersrc sources that file too.
 
 # --- Bar Appearance -----------------------------------------------------------
-# Omarchy's bar is flat and full width: "height": 26, no margin, no radius,
-# `border: none`. Nothing floats, so there is no y_offset and no blur.
-export BAR_HEIGHT=26
+# Omarchy's bar is flat and full width: no margin, no radius, `border: none`.
+# Nothing floats, so there is no y_offset and no blur.
+#
+# Height deviates from Omarchy's 26: the built-in display's usable area starts
+# 32pt down (notch / safe-area inset), and AeroSpace cannot place a window
+# above that. A 26pt bar therefore leaves a 6pt gap below it that no gap
+# setting can close. 29pt brings that down to 3pt -- the same gap the window
+# borders get everywhere else.
+export BAR_HEIGHT=29
 export BAR_Y_OFFSET=0
 export BAR_BLUR_RADIUS=0
 export BAR_POSITION="top"
@@ -45,7 +51,7 @@ export LABEL_DRAWING="on"
 
 # --- Item background ----------------------------------------------------------
 export ITEM_BG_CORNER_RADIUS=3
-export ITEM_BG_HEIGHT=20
+export ITEM_BG_HEIGHT=22
 
 # --- Workspaces ---------------------------------------------------------------
 # #workspaces button { padding: 0 6px; margin: 0 1.5px }

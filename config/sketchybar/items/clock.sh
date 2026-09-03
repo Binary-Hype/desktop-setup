@@ -4,7 +4,10 @@
 # the MacBook's notch owns the middle of the built-in display.
 # Format follows Omarchy's "{:L%A %H:%M}" -- localised weekday plus time.
 
-CLOCK_POPUP_WIDTH=250
+# Must match MENU_WIDTH: the popup is as wide as its widest row, and the
+# separator below is a full-width menu row. A narrower value here left every
+# centred line sitting 20pt off to the left.
+CLOCK_POPUP_WIDTH=$MENU_WIDTH
 
 menu_item clock right right
 ARGS+=( --set clock update_freq=10 icon.drawing=off )
@@ -54,3 +57,6 @@ for i in $(seq 0 7); do
 done
 
 menu_flush
+
+# Fill the calendar now so the first open is never empty.
+"$PLUGIN_DIR/clock.sh" populate &

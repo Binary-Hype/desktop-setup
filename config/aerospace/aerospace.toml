@@ -53,33 +53,34 @@ exec-on-workspace-change = ['/bin/bash', '-c',
 ]
 
 # ── Gaps ─────────────────────────────────────────────────────────────────────
-# Windows are spaced from each other and from the bar, but sit flush against
-# every other screen edge: only inner.* and outer.top are non-zero.
-# outer.top   = SketchyBar height (check with: sketchybar --query bar | grep height)
-# If the bottom still looks empty despite outer.bottom = 0, the macOS Dock is
+# Every gap is sized off the JankyBorders width (3.0 in ~/.config/borders/
+# bordersrc): a window flush against the screen edge has its border clipped, so
+# the outer gaps are exactly one border wide, and the inner ones two -- both
+# neighbours draw their own.
+# If the bottom still looks empty despite outer.bottom = 3, the macOS Dock is
 # the culprit — auto-hide it via System Settings → Dock → Auto-hide.
 [gaps]
 inner.horizontal = 6
 inner.vertical   = 6
-outer.left       = 0
-outer.right      = 0
+outer.left       = 3
+outer.right      = 3
 # Derived from the SketchyBar geometry in ~/.config/sketchybar/variables.sh:
-#   BAR_Y_OFFSET (0) + BAR_HEIGHT (26) = 26pt of bar, + 1pt gap = 27.
+#   BAR_Y_OFFSET (0) + BAR_HEIGHT (29) = 29pt of bar, + 3pt gap = 32.
 # Change either of those and this number has to follow.
 #
 # Per monitor: SketchyBar draws from the physical top of the screen, but
 # AeroSpace measures outer.top from the display's usable area -- and the
 # built-in Retina display's usable area already starts 32pt down (notch /
-# safe-area inset), while both externals start at 0.
-# 27 - 32 is negative, so the built-in needs NO extra gap at all: the flat
-# 26pt bar fits entirely inside the notch inset. 27 everywhere else.
+# safe-area inset), while both externals start at 0. So the built-in needs NO
+# extra gap: the 29pt bar sits inside that inset and leaves exactly the 3pt
+# the other edges get. 32 everywhere else.
 # Measure the inset per display with:
 #   ./install.sh --only sketchybar --dry-run   (prints "Per-display top inset")
 # Pattern is unanchored and spelled to match whether or not AeroSpace's
 # monitor regex is case-sensitive; it cannot collide with "MPG321UR-QD"
 # or "LG ULTRAFINE".
-outer.top        = [{ monitor."[Bb]uilt-[Ii]n" = 0 }, 27]
-outer.bottom     = 0
+outer.top        = [{ monitor."[Bb]uilt-[Ii]n" = 0 }, 32]
+outer.bottom     = 3
 
 
 # ── Main bindings ─────────────────────────────────────────────────────────────
