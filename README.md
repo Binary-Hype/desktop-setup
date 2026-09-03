@@ -227,15 +227,20 @@ to lift that.
 
 | keys | action |
 |---|---|
-| `ctrl+alt` + `h/j/k/l` | focus the monitor in that direction |
-| `ctrl+alt+shift` + `h/j/k/l` | move the focused **window** to that monitor |
+| `cmd+alt+h` / `cmd+alt+l` | focus the previous / next monitor |
+| `cmd+alt+,` / `cmd+alt+.` | move the focused **window** to the previous / next monitor |
 | `cmd+shift+tab` | move the whole **workspace** to the next monitor |
 
-All wrap around. The window moves keep focus on the window you moved
-(`--focus-follows-window`) rather than leaving it on the old monitor.
+All wrap around. These cycle rather than taking a direction, which keeps every
+monitor action at exactly two modifiers -- no `shift`, no three-key chord.
 
-`ctrl+alt` is used for nothing else in this config, so these cannot collide
-with the `cmd` bindings, with macOS, or with German-layout Option characters.
+The window moves leave focus on the current monitor rather than following the
+window, matching `cmd+shift` + `1-9`, which sends a window to another workspace
+without switching to it.
+
+`cmd+alt` is used for nothing else in this config, so these cannot collide with
+the other `cmd` bindings, with macOS, or with German-layout Option characters --
+`cmd` suppresses Option's special characters the same way `ctrl` does.
 
 ## Machine-specific values
 
@@ -250,13 +255,13 @@ the built-in display needs a **smaller** value — by exactly that inset:
 outer.top = BAR_Y_OFFSET + BAR_HEIGHT + desired_gap - display_top_inset
 ```
 
-With the current flat 29pt bar that is `0 + 29 + 3 - 32 = 0` on this MacBook,
-i.e. the built-in display needs **no** extra gap: the bar sits inside the notch
-inset and leaves exactly the 3pt every other edge gets. Externals get `32`.
+With the current flat 32pt bar that is `0 + 32 + 3 - 32 = 3` on this MacBook,
+i.e. the built-in display just gets the plain 3pt gap every other edge gets:
+the bar fills the notch inset exactly. Externals get `35`.
 
-That 29 is also why the bar is not Omarchy's 26: AeroSpace cannot place a
-window above the 32pt inset, so a 26pt bar leaves a 6pt gap below it that no
-gap setting can close. 29 brings it down to 3.
+That 32 is also why the bar is not Omarchy's 26: it matches the notch inset, so
+the bar covers the notch completely and AeroSpace — which cannot place a window
+above that inset — starts windows immediately below it.
 
 `install.sh` prints the real inset for each display. Note it also changes
 depending on whether the built-in is the *main* display (menu bar present) or a

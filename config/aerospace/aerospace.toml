@@ -65,21 +65,21 @@ inner.vertical   = 6
 outer.left       = 3
 outer.right      = 3
 # Derived from the SketchyBar geometry in ~/.config/sketchybar/variables.sh:
-#   BAR_Y_OFFSET (0) + BAR_HEIGHT (29) = 29pt of bar, + 3pt gap = 32.
+#   BAR_Y_OFFSET (0) + BAR_HEIGHT (32) = 32pt of bar, + 3pt gap = 35.
 # Change either of those and this number has to follow.
 #
 # Per monitor: SketchyBar draws from the physical top of the screen, but
 # AeroSpace measures outer.top from the display's usable area -- and the
 # built-in Retina display's usable area already starts 32pt down (notch /
-# safe-area inset), while both externals start at 0. So the built-in needs NO
-# extra gap: the 29pt bar sits inside that inset and leaves exactly the 3pt
-# the other edges get. 32 everywhere else.
+# safe-area inset), while both externals start at 0. The 32pt bar fills that
+# inset exactly (covering the notch), so the built-in only needs the plain 3pt
+# gap the other edges get. 35 everywhere else.
 # Measure the inset per display with:
 #   ./install.sh --only sketchybar --dry-run   (prints "Per-display top inset")
 # Pattern is unanchored and spelled to match whether or not AeroSpace's
 # monitor regex is case-sensitive; it cannot collide with "MPG321UR-QD"
 # or "LG ULTRAFINE".
-outer.top        = [{ monitor."[Bb]uilt-[Ii]n" = 0 }, 32]
+outer.top        = [{ monitor."[Bb]uilt-[Ii]n" = 3 }, 35]
 outer.bottom     = 3
 
 
@@ -173,23 +173,27 @@ cmd-tab         = 'workspace-back-and-forth'
 cmd-shift-tab   = 'move-workspace-to-monitor --wrap-around next'
 
 # ── Monitors ──────────────────────────────────────────────────────────────────
-# ctrl-alt is otherwise unused in this config, so these cannot clash with the
-# cmd bindings above, with macOS, or with German-layout Option characters (see
-# the note above the workspace bindings). Directions match the cmd-hjkl layout.
-# --focus-follows-window keeps focus on the window you just moved, rather than
-# leaving it behind on the old monitor.
+# cmd-alt, not ctrl-alt: ctrl and alt are both bottom-row pinky keys, and adding
+# shift for the window moves made a three-modifier one-hand chord. Cmd and Alt
+# sit together under the thumb. Cmd suppresses Option's German special
+# characters the same way Ctrl does (see the note above the workspace
+# bindings), so cmd-alt is just as layout-safe. Nothing else uses cmd-alt.
+#
+# These cycle prev/next instead of taking a direction. With a left-to-right
+# monitor row that loses nothing, and it keeps shift out of the picture
+# entirely -- every monitor action is exactly two modifiers.
+#
+# The window moves omit --focus-follows-window, so focus stays on the current
+# monitor. That matches cmd-shift-N, which sends a window to another workspace
+# without switching to it.
 
 # Focus another monitor
-ctrl-alt-h = 'focus-monitor --wrap-around left'
-ctrl-alt-j = 'focus-monitor --wrap-around down'
-ctrl-alt-k = 'focus-monitor --wrap-around up'
-ctrl-alt-l = 'focus-monitor --wrap-around right'
+cmd-alt-h = 'focus-monitor --wrap-around prev'
+cmd-alt-l = 'focus-monitor --wrap-around next'
 
 # Move the focused WINDOW to another monitor
-ctrl-alt-shift-h = 'move-node-to-monitor --wrap-around --focus-follows-window left'
-ctrl-alt-shift-j = 'move-node-to-monitor --wrap-around --focus-follows-window down'
-ctrl-alt-shift-k = 'move-node-to-monitor --wrap-around --focus-follows-window up'
-ctrl-alt-shift-l = 'move-node-to-monitor --wrap-around --focus-follows-window right'
+cmd-alt-comma  = 'move-node-to-monitor --wrap-around prev'
+cmd-alt-period = 'move-node-to-monitor --wrap-around next'
 
 # Move the whole WORKSPACE to the next monitor (already existed)
 cmd-shift-semicolon = 'mode service'

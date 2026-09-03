@@ -48,7 +48,7 @@ uptime_short() {
 update_bar_item() {
   # Icon-only on the bar, exactly like Omarchy's cpu module. The figure is one
   # click away.
-  sketchybar --set "${NAME:-system}" icon="$ICON_CPU" label.drawing=off
+  sketchybar --set system icon="$ICON_CPU" label.drawing=off
 }
 
 populate() {

@@ -47,7 +47,7 @@ update_bar_item() {
   local color="$ITEM_COLOR"
   [ "$PERCENT" -le 20 ] && color="$color7"
   [ "$PERCENT" -le 10 ] && color="$ACCENT_COLOR"
-  sketchybar --set "${NAME:-battery}" icon="$ICON_OUT" icon.color="$color" label.drawing=off
+  sketchybar --set battery icon="$ICON_OUT" icon.color="$color" label.drawing=off
 }
 
 populate() {

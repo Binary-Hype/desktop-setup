@@ -50,6 +50,6 @@ case "$SENDER" in
   fi
   ;;
 *)
-  sketchybar --set "${NAME:-clock}" label="$(date '+%A %H:%M')"
+  sketchybar --set clock label="$(date '+%A %H:%M')"
   ;;
 esac

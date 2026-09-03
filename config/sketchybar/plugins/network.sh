@@ -56,7 +56,7 @@ icon_for_rssi() {
 }
 
 update_bar_item() {
-  local item="${NAME:-network}"
+  local item=network
 
   if [ -z "$WIFI_IF" ] || [ "$(wifi_power)" = "Off" ]; then
     sketchybar --set "$item" icon="$ICON_WIFI_OFF" icon.color="$color3" label.drawing=off

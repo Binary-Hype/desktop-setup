@@ -176,4 +176,13 @@ menu_close() { sketchybar --set "$1" popup.drawing=off; }
 # menu_open NAME -- show the popup immediately with whatever the rows already
 # hold, so it never appears empty and fills in visibly afterwards. The caller
 # refreshes in place right after.
-menu_open() { sketchybar --set "$1" popup.drawing=on; }
+#
+# Closes every other menu in the same call, so only one is ever open.
+menu_open() {
+  local args=() other
+  for other in $MENU_ITEMS; do
+    [ "$other" = "$1" ] && continue
+    args+=( --set "$other" popup.drawing=off )
+  done
+  sketchybar "${args[@]}" --set "$1" popup.drawing=on
+}

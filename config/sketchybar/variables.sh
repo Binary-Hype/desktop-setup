@@ -13,10 +13,10 @@
 #
 # Height deviates from Omarchy's 26: the built-in display's usable area starts
 # 32pt down (notch / safe-area inset), and AeroSpace cannot place a window
-# above that. A 26pt bar therefore leaves a 6pt gap below it that no gap
-# setting can close. 29pt brings that down to 3pt -- the same gap the window
-# borders get everywhere else.
-export BAR_HEIGHT=29
+# above that. 32pt makes the bar exactly as tall as that inset, so it covers
+# the notch completely; the 3pt gap the window borders get everywhere else
+# then comes from AeroSpace's outer.top instead.
+export BAR_HEIGHT=32
 export BAR_Y_OFFSET=0
 export BAR_BLUR_RADIUS=0
 export BAR_POSITION="top"
@@ -84,6 +84,11 @@ export MENU_ROW_BG_IDLE=0x00000000
 # wider than the rest -- which showed up as a hover highlight that reached the
 # left border but stopped ~20pt short of the right one.
 export MENU_ROW_INSET=3
+# Every bar item that owns a menu. Opening one closes the rest -- the way menu
+# bar menus behave. mouse.exited.global does not cover this on its own: moving
+# from one bar icon straight to the next never leaves the bar, so the first
+# menu would stay open behind the second.
+export MENU_ITEMS="logo clock battery system volume network bluetooth"
 export MENU_BG_CORNER_RADIUS=6
 export MENU_BG_BORDER_WIDTH=2
 export MENU_Y_OFFSET=0

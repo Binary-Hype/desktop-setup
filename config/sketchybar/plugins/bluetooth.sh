@@ -117,8 +117,10 @@ populate() {
   menu_flush
 }
 
+# Never redraw through $NAME: when an action runs from a popup row's
+# click_script, $NAME is that row, not the bar item.
 update_bar_item() {
-  local item="${NAME:-bluetooth}" power
+  local item=bluetooth power
   power=$("$BLUEUTIL" --power 2>/dev/null)
 
   # Distinguish "radio is off" (0) from "blueutil could not answer" (empty).
