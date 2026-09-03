@@ -28,7 +28,9 @@ row() {
               padding_right=0
               "label.width=$CLOCK_POPUP_WIDTH"
               label.padding_left=0
-              label.padding_right=0 )
+              label.padding_right=0
+              "background.padding_left=$MENU_ROW_INSET"
+              "background.padding_right=$MENU_ROW_INSET" )
 }
 
 # Blank rows top and bottom, so the clock and the grid do not sit against the
@@ -44,6 +46,8 @@ spacer() {
               "label.font=$BAR_FONT:Regular:6.0"
               background.drawing=on
               background.color=0x00000000
+              "background.padding_left=$MENU_ROW_INSET"
+              "background.padding_right=$MENU_ROW_INSET"
               "background.height=$2" )
 }
 

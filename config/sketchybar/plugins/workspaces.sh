@@ -81,16 +81,18 @@ render() {
         WINDOWS=$(aerospace list-windows --workspace "$WS" 2>/dev/null | wc -l | tr -d ' ')
 
         if [ "$WS" = "$FOCUSED" ]; then
-            ARGS+=( --set "$ITEM" "label=$WS_ACTIVE_GLYPH" "label.color=$ACCENT_COLOR" )
+            ARGS+=( --set "$ITEM"
+                        "label=$ICON_WS_ACTIVE"
+                        "label.font=$WS_ACTIVE_FONT"
+                        "label.color=$ACCENT_COLOR" )
         elif [ "$WINDOWS" -gt 0 ]; then
-            ARGS+=( --set "$ITEM" "label=$WS" "label.color=$color7" )
+            ARGS+=( --set "$ITEM" "label=$WS" "label.font=$LABEL_FONT" "label.color=$color7" )
         else
             # Omarchy: #workspaces button.empty { opacity: 0.5 }
-            ARGS+=( --set "$ITEM" "label=$WS" "label.color=$color3" )
+            ARGS+=( --set "$ITEM" "label=$WS" "label.font=$LABEL_FONT" "label.color=$color3" )
         fi
 
         ARGS+=( --set "$ITEM"
-                    "label.font=$LABEL_FONT"
                     "label.padding_left=$WS_LABEL_PADDING"
                     "label.padding_right=$WS_LABEL_PADDING"
                     "padding_left=$WS_ITEM_PADDING"

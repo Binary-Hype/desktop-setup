@@ -48,6 +48,8 @@ Components:
   sketchybar   Status bar (formula + Cascadia Code NF, blueutil,
                switchaudio-osx, jq)
                config/sketchybar/
+               Icons are Phosphor, vendored in config/sketchybar/fonts/
+               and copied into ~/Library/Fonts.
   borders      JankyBorders window outlines (formula)
                config/borders/bordersrc
                Uses sketchybar/colors.sh for its palette when present,
@@ -241,6 +243,20 @@ if ! $DRY_RUN; then
   if want aerospace && [ -d "$DEST/aerospace/scripts" ]; then
     find "$DEST/aerospace/scripts" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
   fi
+fi
+
+# ── 2a. Fonts the bar draws with ──────────────────────────────────────────────
+# Phosphor (https://phosphoricons.com, MIT) supplies every icon. It has no
+# Homebrew cask, so the two families the bar uses are vendored in the repo and
+# copied into the user font directory here. Cascadia Code NF, which supplies the
+# text, comes from Homebrew above.
+if want sketchybar && [ -d "$SRC/sketchybar/fonts" ]; then
+  step "Installing bar fonts into ~/Library/Fonts"
+  for font in "$SRC"/sketchybar/fonts/*.ttf; do
+    [ -e "$font" ] || continue
+    info "$(basename "$font")"
+    run cp "$font" "$HOME/Library/Fonts/"
+  done
 fi
 
 # ── 2b. Adapt gaps.outer.top when there is no bar ─────────────────────────────

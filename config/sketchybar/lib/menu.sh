@@ -73,6 +73,8 @@ menu_row() {
               background.drawing=on
               "background.color=$MENU_ROW_BG_IDLE"
               background.corner_radius=4
+              "background.padding_left=$MENU_ROW_INSET"
+              "background.padding_right=$MENU_ROW_INSET"
               "background.height=$MENU_ROW_HEIGHT"
               "script=$LIB_DIR/hover.sh"
           --subscribe "$name" mouse.entered mouse.exited mouse.exited.global )
@@ -101,6 +103,8 @@ menu_header() {
               "label.font=$BAR_FONT:Bold:10.0"
               background.drawing=on
               "background.color=$MENU_ROW_BG_IDLE"
+              "background.padding_left=$MENU_ROW_INSET"
+              "background.padding_right=$MENU_ROW_INSET"
               background.height=20 )
 }
 

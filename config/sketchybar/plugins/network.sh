@@ -48,11 +48,10 @@ wifi_power() { networksetup -getairportpower "$WIFI_IF" 2>/dev/null | awk '{prin
 icon_for_rssi() {
   local quality
   quality=$(echo "${1:--70}" | awk '{ q = 2 * ($1 + 100); if (q < 0) q = 0; if (q > 100) q = 100; printf "%.0f", q }')
-  if   [ "$quality" -ge 80 ]; then ICON_OUT="󰤨"
-  elif [ "$quality" -ge 60 ]; then ICON_OUT="󰤥"
-  elif [ "$quality" -ge 40 ]; then ICON_OUT="󰤢"
-  elif [ "$quality" -ge 20 ]; then ICON_OUT="󰤟"
-  else                             ICON_OUT="󰤯"; fi
+  if   [ "$quality" -ge 80 ]; then ICON_OUT="$ICON_WIFI_4"
+  elif [ "$quality" -ge 60 ]; then ICON_OUT="$ICON_WIFI_3"
+  elif [ "$quality" -ge 40 ]; then ICON_OUT="$ICON_WIFI_2"
+  else                             ICON_OUT="$ICON_WIFI_1"; fi
   QUALITY_OUT="$quality"
 }
 
@@ -60,7 +59,7 @@ update_bar_item() {
   local item="${NAME:-network}"
 
   if [ -z "$WIFI_IF" ] || [ "$(wifi_power)" = "Off" ]; then
-    sketchybar --set "$item" icon="󰤮" icon.color="$color3" label.drawing=off
+    sketchybar --set "$item" icon="$ICON_WIFI_OFF" icon.color="$color3" label.drawing=off
     return
   fi
 
@@ -68,7 +67,7 @@ update_bar_item() {
   IFS=$'\t' read -r status rssi channel <<< "$(wifi_state)"
 
   if [ "$status" != "spairport_status_connected" ]; then
-    sketchybar --set "$item" icon="󰤯" icon.color="$ITEM_COLOR" label.drawing=off
+    sketchybar --set "$item" icon="$ICON_WIFI_NOLINK" icon.color="$ITEM_COLOR" label.drawing=off
     return
   fi
 
@@ -82,18 +81,18 @@ populate() {
   power=$(wifi_power)
 
   if [ "$power" != "On" ]; then
-    menu_set network.power "󰤮" "Wi-Fi: Aus" "$color3" "$SELF power on"
+    menu_set network.power "$ICON_WIFI_OFF" "Wi-Fi: Aus" "$color3" "$SELF power on"
     ARGS+=( --set network.hdr.current drawing=off
             --set network.current     drawing=off
             --set network.hdr.known   drawing=off )
     menu_hide_range network.known 0 $((NET_MAX_KNOWN - 1))
-    menu_set network.settings "󰒓" "Wi-Fi Einstellungen…" "$color7" "$SELF settings"
+    menu_set network.settings "$ICON_SETTINGS" "Wi-Fi Einstellungen…" "$color7" "$SELF settings"
     ARGS+=( --set network.sep drawing=on )
     menu_flush
     return
   fi
 
-  menu_set network.power "󰤨" "Wi-Fi: An" "$ACCENT_COLOR" "$SELF power off"
+  menu_set network.power "$ICON_WIFI_4" "Wi-Fi: An" "$ACCENT_COLOR" "$SELF power off"
 
   IFS=$'\t' read -r status rssi channel <<< "$(wifi_state)"
   if [ "$status" = "spairport_status_connected" ]; then
@@ -113,7 +112,7 @@ populate() {
     [ "$i" -ge "$NET_MAX_KNOWN" ] && break
     # A neutral glyph: macOS gives no per-network signal for saved networks,
     # so a strength icon here would be made up.
-    menu_set "network.known.$i" "󰖩" "$ssid" "$color7" "$SELF connect '$ssid'"
+    menu_set "network.known.$i" "$ICON_NETWORK_SAVED" "$ssid" "$color7" "$SELF connect '$ssid'"
     i=$((i + 1))
   done < <(networksetup -listpreferredwirelessnetworks "$WIFI_IF" 2>/dev/null \
              | tail -n +2 | sed 's/^[[:space:]]*//')
@@ -122,7 +121,7 @@ populate() {
   if [ "$i" -gt 0 ]; then ARGS+=( --set network.hdr.known drawing=on )
   else                    ARGS+=( --set network.hdr.known drawing=off ); fi
 
-  menu_set network.settings "󰒓" "Wi-Fi Einstellungen…" "$color7" "$SELF settings"
+  menu_set network.settings "$ICON_SETTINGS" "Wi-Fi Einstellungen…" "$color7" "$SELF settings"
   ARGS+=( --set network.sep drawing=on )
   menu_flush
 }

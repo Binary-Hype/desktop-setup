@@ -35,6 +35,7 @@ TRACKED=(
   "sketchybar/colors.sh"
   "sketchybar/variables.sh"
   "sketchybar/lib"
+  "sketchybar/fonts"
   "sketchybar/items"
   "sketchybar/plugins"
 )

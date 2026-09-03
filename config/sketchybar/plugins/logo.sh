@@ -10,12 +10,12 @@ source "$CONFIG_DIR/lib/menu.sh"
 SELF="$PLUGIN_DIR/logo.sh"
 
 populate() {
-  menu_set logo.apps       ""  "Apps öffnen…"          "$ITEM_COLOR" "$SELF run raycast"
-  menu_set logo.screenshot "󰹑"  "Screenshot"            "$ITEM_COLOR" "$SELF run screenshot"
-  menu_set logo.reload_bar "󰑓"  "SketchyBar neu laden"  "$ITEM_COLOR" "$SELF run reload_bar"
-  menu_set logo.reload_wm  "󰑓"  "AeroSpace neu laden"   "$ITEM_COLOR" "$SELF run reload_wm"
+  menu_set logo.apps       "$ICON_APPS"       "Apps öffnen…"          "$ITEM_COLOR" "$SELF run raycast"
+  menu_set logo.screenshot "$ICON_SCREENSHOT" "Screenshot"            "$ITEM_COLOR" "$SELF run screenshot"
+  menu_set logo.reload_bar "$ICON_RELOAD"     "SketchyBar neu laden"  "$ITEM_COLOR" "$SELF run reload_bar"
+  menu_set logo.reload_wm  "$ICON_RELOAD"     "AeroSpace neu laden"   "$ITEM_COLOR" "$SELF run reload_wm"
   ARGS+=( --set logo.sep drawing=on )
-  menu_set logo.settings   "󰒓"  "Systemeinstellungen…"  "$color7"     "$SELF run settings"
+  menu_set logo.settings   "$ICON_SETTINGS"   "Systemeinstellungen…"  "$color7"     "$SELF run settings"
   menu_flush
 }
 

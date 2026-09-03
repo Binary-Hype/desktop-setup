@@ -5,10 +5,6 @@ source "$CONFIG_DIR/lib/menu.sh"
 
 SELF="$PLUGIN_DIR/battery.sh"
 
-# Omarchy's icon ramps (format-icons in config.jsonc), ten steps each.
-BAT_DISCHARGING=(󰁺 󰁻 󰁼 󰁽 󰁾 󰁿 󰂀 󰂁 󰂂 󰁹)
-BAT_CHARGING=(󰢜 󰂆 󰂇 󰂈 󰢝 󰂉 󰢞 󰂊 󰂋 󰂅)
-
 # Fills PERCENT / STATE / REMAINING from a single pmset call -- `pmset -g batt`
 # is slow enough that asking it twice per redraw is noticeable.
 read_battery() {
@@ -28,14 +24,19 @@ read_battery() {
 }
 
 # Sets ICON_OUT rather than echoing -- this runs on every redraw.
+# Omarchy ramps through ten Nerd Font glyphs; Phosphor draws five levels, so
+# the thresholds are wider.
 battery_icon() {
-  local step=$(( ${PERCENT:-0} / 10 ))
-  [ "$step" -gt 9 ] && step=9
-  if [ "$STATE" = "discharging" ]; then
-    ICON_OUT="${BAT_DISCHARGING[$step]}"
-  else
-    ICON_OUT="${BAT_CHARGING[$step]}"
+  if [ "$STATE" != "discharging" ]; then
+    ICON_OUT="$ICON_BAT_CHARGING"
+    return
   fi
+  local pct=${PERCENT:-0}
+  if   [ "$pct" -ge 85 ]; then ICON_OUT="$ICON_BAT_4"
+  elif [ "$pct" -ge 60 ]; then ICON_OUT="$ICON_BAT_3"
+  elif [ "$pct" -ge 35 ]; then ICON_OUT="$ICON_BAT_2"
+  elif [ "$pct" -ge 10 ]; then ICON_OUT="$ICON_BAT_1"
+  else                         ICON_OUT="$ICON_BAT_0"; fi
 }
 
 update_bar_item() {
@@ -68,14 +69,14 @@ populate() {
   # Toggling low power mode needs sudo, so this line reports rather than acts.
   menu_info battery.lpm    ""          "Energiesparmodus: $lpm_state" "$color7"
 
-  menu_set battery.lock     "󰌾" "Bildschirm sperren" "$ITEM_COLOR" "$SELF power lock"
-  menu_set battery.sleep    "󰒲" "Ruhezustand"        "$ITEM_COLOR" "$SELF power sleep"
+  menu_set battery.lock     "$ICON_LOCK" "Bildschirm sperren" "$ITEM_COLOR" "$SELF power lock"
+  menu_set battery.sleep    "$ICON_SLEEP" "Ruhezustand"        "$ITEM_COLOR" "$SELF power sleep"
   # These two do NOT ask for confirmation, hence the ellipsis and the separator
   # keeping them away from the rest.
-  menu_set battery.restart  "󰜉" "Neu starten…"       "$ITEM_COLOR" "$SELF power restart"
-  menu_set battery.shutdown "󰐥" "Ausschalten…"       "$ITEM_COLOR" "$SELF power shutdown"
+  menu_set battery.restart  "$ICON_RESTART" "Neu starten…"       "$ITEM_COLOR" "$SELF power restart"
+  menu_set battery.shutdown "$ICON_POWER" "Ausschalten…"       "$ITEM_COLOR" "$SELF power shutdown"
 
-  menu_set battery.settings "󰒓" "Batterie-Einstellungen…" "$color7" "$SELF settings"
+  menu_set battery.settings "$ICON_SETTINGS" "Batterie-Einstellungen…" "$color7" "$SELF settings"
 
   ARGS+=( --set battery.sep1 drawing=on --set battery.sep2 drawing=on )
   menu_flush

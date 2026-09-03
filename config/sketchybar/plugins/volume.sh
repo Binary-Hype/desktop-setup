@@ -41,11 +41,10 @@ volume_step() {
 
 icon_for_state() {
   case "$2:$1" in
-    true:*)               ICON_OUT="󰝟" ;;
-    *:100|*:[6-9][0-9])   ICON_OUT="󰕾" ;;
-    *:[3-5][0-9])         ICON_OUT="󰖀" ;;
-    *:[1-2][0-9]|*:[1-9]) ICON_OUT="󰕿" ;;
-    *)                    ICON_OUT="󰝟" ;;
+    true:*)               ICON_OUT="$ICON_VOL_MUTED" ;;
+    *:100|*:[6-9][0-9])   ICON_OUT="$ICON_VOL_HIGH" ;;
+    *:[1-5][0-9]|*:[1-9]) ICON_OUT="$ICON_VOL_LOW" ;;
+    *)                    ICON_OUT="$ICON_VOL_NONE" ;;
   esac
 }
 
@@ -76,9 +75,9 @@ populate() {
   menu_set volume.level "$ICON_OUT" "$(level_bar "$volume") ${volume}%" "$ACCENT_COLOR" ""
 
   if [ "$muted" = "true" ]; then
-    menu_set volume.mute "󰕾" "Ton einschalten"  "$ITEM_COLOR" "$SELF mute"
+    menu_set volume.mute "$ICON_VOL_HIGH" "Ton einschalten"  "$ITEM_COLOR" "$SELF mute"
   else
-    menu_set volume.mute "󰝟" "Stumm schalten"   "$ITEM_COLOR" "$SELF mute"
+    menu_set volume.mute "$ICON_VOL_MUTED" "Stumm schalten"   "$ITEM_COLOR" "$SELF mute"
   fi
 
   local i=0
@@ -89,9 +88,9 @@ populate() {
       [ -z "$device" ] && continue
       [ "$i" -ge "$VOL_MAX_DEVICES" ] && break
       case "$(printf '%s' "$device" | tr '[:upper:]' '[:lower:]')" in
-        *airpod*|*headphone*|*headset*) icon="󰋋" ;;
-        *display*|*monitor*|*hdmi*)     icon="󰍹" ;;
-        *) icon="󰓃" ;;
+        *airpod*|*headphone*|*headset*) icon="$ICON_DEV_HEADPHONES" ;;
+        *display*|*monitor*|*hdmi*)     icon="$ICON_DEV_MONITOR" ;;
+        *) icon="$ICON_DEV_SPEAKER" ;;
       esac
       if [ "$device" = "$current" ]; then
         menu_set "volume.dev.$i" "$icon" "$device  ✓" "$ACCENT_COLOR" "$SELF output '$device'"
@@ -106,7 +105,7 @@ populate() {
   if [ "$i" -gt 0 ]; then ARGS+=( --set volume.hdr.output drawing=on )
   else                    ARGS+=( --set volume.hdr.output drawing=off ); fi
 
-  menu_set volume.settings "󰒓" "Ton-Einstellungen…" "$color7" "$SELF settings"
+  menu_set volume.settings "$ICON_SETTINGS" "Ton-Einstellungen…" "$color7" "$SELF settings"
   ARGS+=( --set volume.sep drawing=on )
   menu_flush
 }

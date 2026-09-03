@@ -48,14 +48,14 @@ uptime_short() {
 update_bar_item() {
   # Icon-only on the bar, exactly like Omarchy's cpu module. The figure is one
   # click away.
-  sketchybar --set "${NAME:-system}" icon="󰍛" label.drawing=off
+  sketchybar --set "${NAME:-system}" icon="$ICON_CPU" label.drawing=off
 }
 
 populate() {
   ARGS=()
-  menu_info system.cpu    "󰍛" "CPU      $(cpu_percent) %"    "$ACCENT_COLOR"
-  menu_info system.ram    ""  "RAM      $(memory_usage)"     "$ITEM_COLOR"
-  menu_info system.uptime ""  "Uptime   $(uptime_short)"     "$ITEM_COLOR"
+  menu_info system.cpu    "$ICON_CPU"    "CPU      $(cpu_percent) %"    "$ACCENT_COLOR"
+  menu_info system.ram    "$ICON_RAM"    "RAM      $(memory_usage)"     "$ITEM_COLOR"
+  menu_info system.uptime "$ICON_UPTIME" "Uptime   $(uptime_short)"     "$ITEM_COLOR"
 
   # Process rows are informational only -- nothing gets killed from the bar.
   local i=0 pcpu comm
@@ -67,7 +67,7 @@ populate() {
   done < <(ps -Aceo pcpu,comm -r | tail -n +2 | head -n "$SYS_TOP_PROCS")
   menu_hide_range system.proc "$i" $((SYS_TOP_PROCS - 1))
 
-  menu_set system.monitor "󰒓" "Activity Monitor…" "$color7" "$SELF monitor"
+  menu_set system.monitor "$ICON_SETTINGS" "Activity Monitor…" "$color7" "$SELF monitor"
 
   ARGS+=( --set system.hdr.system drawing=on
           --set system.hdr.procs  drawing=on

@@ -4,7 +4,7 @@
 # font does not exist here, so this uses the Nerd Font Apple mark.
 
 menu_item logo left left
-ARGS+=( --set logo icon="" "icon.color=$ACCENT_COLOR" label.drawing=off )
+ARGS+=( --set logo "icon=$ICON_LOGO" "icon.color=$ACCENT_COLOR" label.drawing=off )
 
 menu_row       logo logo.apps
 menu_row       logo logo.screenshot

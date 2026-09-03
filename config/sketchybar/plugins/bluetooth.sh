@@ -54,14 +54,14 @@ list_devices() {
 icon_for() {
   shopt -s nocasematch
   case "$1" in
-    *headphone*|*headset*|*airpod*) ICON_OUT="󰋋" ;;
-    *speaker*|*audio*)              ICON_OUT="󰓃" ;;
-    *keyboard*)                     ICON_OUT="󰌌" ;;
-    *trackpad*)                     ICON_OUT="󰟸" ;;
-    *mouse*)                        ICON_OUT="󰍽" ;;
-    *phone*)                        ICON_OUT="󰄜" ;;
-    *watch*)                        ICON_OUT="󰖉" ;;
-    *tablet*|*ipad*)                ICON_OUT="󰓶" ;;
+    *headphone*|*headset*|*airpod*) ICON_OUT="$ICON_DEV_OTHER" ;;
+    *speaker*|*audio*)              ICON_OUT="$ICON_DEV_SPEAKER" ;;
+    *keyboard*)                     ICON_OUT="$ICON_DEV_KEYBOARD" ;;
+    *trackpad*)                     ICON_OUT="$ICON_DEV_TRACKPAD" ;;
+    *mouse*)                        ICON_OUT="$ICON_DEV_MOUSE" ;;
+    *phone*)                        ICON_OUT="$ICON_DEV_PHONE" ;;
+    *watch*)                        ICON_OUT="$ICON_DEV_WATCH" ;;
+    *tablet*|*ipad*)                ICON_OUT="$ICON_DEV_TABLET" ;;
     *)                              ICON_OUT="󰂯" ;;
   esac
   shopt -u nocasematch
@@ -73,18 +73,18 @@ populate() {
   power=$("$BLUEUTIL" --power 2>/dev/null)
 
   if [ "$power" != "1" ]; then
-    menu_set bluetooth.power "󰂲" "Bluetooth: Aus" "$color3" "$SELF toggle_power"
+    menu_set bluetooth.power "$ICON_BT_OFF" "Bluetooth: Aus" "$color3" "$SELF toggle_power"
     ARGS+=( --set bluetooth.hdr.connected drawing=off
             --set bluetooth.hdr.other     drawing=off )
     menu_hide_range bluetooth.dev.c 0 $((BT_MAX_CONNECTED - 1))
     menu_hide_range bluetooth.dev.o 0 $((BT_MAX_OTHER - 1))
-    menu_set bluetooth.settings "󰒓" "Bluetooth-Einstellungen…" "$color7" "$SELF settings"
+    menu_set bluetooth.settings "$ICON_SETTINGS" "Bluetooth-Einstellungen…" "$color7" "$SELF settings"
     ARGS+=( --set bluetooth.sep drawing=on )
     menu_flush
     return
   fi
 
-  menu_set bluetooth.power "󰂯" "Bluetooth: An" "$ACCENT_COLOR" "$SELF toggle_power"
+  menu_set bluetooth.power "$ICON_BT" "Bluetooth: An" "$ACCENT_COLOR" "$SELF toggle_power"
 
   local conn=0 other=0 slot color
   while IFS=$'\t' read -r dev_conn dev_type dev_addr dev_name; do
@@ -128,15 +128,15 @@ update_bar_item() {
   [ -z "$power" ] && return
 
   if [ "$power" != "1" ]; then
-    sketchybar --set "$item" icon="󰂲" icon.color="$color3" label.drawing=off
+    sketchybar --set "$item" icon="$ICON_BT_OFF" icon.color="$color3" label.drawing=off
     return
   fi
 
   # Omarchy: format-connected "󰂱", format "" (plain) -- icon only, no name.
   if [ -n "$(list_devices | awk -F'\t' '$1=="1"' | head -1)" ]; then
-    sketchybar --set "$item" icon="󰂱" icon.color="$ACCENT_COLOR" label.drawing=off
+    sketchybar --set "$item" icon="$ICON_BT_CONNECTED" icon.color="$ACCENT_COLOR" label.drawing=off
   else
-    sketchybar --set "$item" icon="󰂯" icon.color="$ITEM_COLOR" label.drawing=off
+    sketchybar --set "$item" icon="$ICON_BT" icon.color="$ITEM_COLOR" label.drawing=off
   fi
 }
 

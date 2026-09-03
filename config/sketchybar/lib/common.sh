@@ -11,6 +11,7 @@ else
     source "$CONFIG_DIR/colors.sh"
 fi
 source "$CONFIG_DIR/variables.sh"
+source "$CONFIG_DIR/lib/icons.sh"
 
 PLUGIN_DIR="$CONFIG_DIR/plugins"
 ITEM_DIR="$CONFIG_DIR/items"

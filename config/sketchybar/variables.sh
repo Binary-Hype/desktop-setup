@@ -38,13 +38,13 @@ export ITEM_PADDING_LEFT=7
 export ITEM_PADDING_RIGHT=7
 
 # --- Fonts --------------------------------------------------------------------
-# Cascadia Code NF -- the Nerd Font build, so the bar's glyphs come from the
-# same family as its text. Omarchy uses JetBrainsMono Nerd Font at 12px; 13pt
-# matches that optically at macOS' point scale.
+# Text is Cascadia Code; icons are Phosphor (https://phosphoricons.com).
+# Omarchy uses JetBrainsMono Nerd Font at 12px; 13pt matches that optically at
+# macOS' point scale. Icons run larger, as Phosphor's outlines read lighter
+# than a text glyph of the same size.
 export BAR_FONT="Cascadia Code NF"
-# Icons run larger than the text: Cascadia's Nerd Font patch draws its glyphs
-# noticeably smaller than JetBrainsMono's at the same point size.
-export ICON_FONT="$BAR_FONT:Regular:16.0"
+export ICON_FAMILY="Phosphor"
+export ICON_FONT="$ICON_FAMILY:Regular:16.0"
 export LABEL_FONT="$BAR_FONT:Regular:13.0"
 export ICON_PADDING_LEFT=0
 export ICON_PADDING_RIGHT=0
@@ -65,14 +65,20 @@ export WS_LABEL_PADDING=6
 # bar. AeroSpace has no such setting -- plugins/workspaces.sh unions this list
 # with the workspaces that actually exist.
 export WS_PERSISTENT="1 2 3 4 5"
-# The glyph Omarchy uses for the focused workspace instead of its number.
-export WS_ACTIVE_GLYPH="󱓻"
+# Omarchy replaces the focused workspace's number with a dot. Phosphor's
+# outline circle is too faint at this size, so the dot is drawn from the Fill
+# family (see ICON_WS_ACTIVE in lib/icons.sh).
+export WS_ACTIVE_FONT="Phosphor-Fill:Regular:9.0"
 
 # --- Menus (popups) -----------------------------------------------------------
 export MENU_WIDTH=290
 export MENU_LABEL_WIDTH=232
 export MENU_ROW_HEIGHT=26
 export MENU_ROW_BG_IDLE=0x00000000
+# Keeps a row's background off the popup's own border. Flush against it, the
+# rounded corners of each row poked through the border as little wedges down
+# the popup's left edge.
+export MENU_ROW_INSET=3
 export MENU_BG_CORNER_RADIUS=6
 export MENU_BG_BORDER_WIDTH=2
 export MENU_Y_OFFSET=0

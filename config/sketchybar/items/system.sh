@@ -7,7 +7,7 @@
 SYS_TOP_PROCS=5
 
 menu_item system right right
-ARGS+=( --set system update_freq=5 icon="󰍛" label.drawing=off )
+ARGS+=( --set system update_freq=5 "icon=$ICON_CPU" label.drawing=off )
 
 menu_header system system.hdr.system "System"
 menu_row    system system.cpu

@@ -91,8 +91,10 @@ config/sketchybar/
   colors.sh                       THE palette — bar, menus and borders
   variables.sh                    geometry, fonts, paddings, menu metrics
   lib/common.sh                   palette + helpers every script sources
+  lib/icons.sh                    every glyph the bar draws, named
   lib/menu.sh                     the popup-menu framework
   lib/hover.sh                    hover highlight for every menu row
+  fonts/                          Phosphor, vendored (no Homebrew cask exists)
   items/                          one file per module: item + menu rows
   plugins/                        one file per module: updates + click actions
 ```
@@ -278,6 +280,9 @@ looks wrong on one display, check the name with `aerospace list-monitors`.
   opens a menu instead.
 - Bar modules are **icon-only**, like Omarchy's: no CPU/volume/battery figures
   on the bar, and no memory module at all. The numbers live in the menus.
+- Icons are **Phosphor**, not Nerd Font glyphs, so they are one consistent set
+  rather than a mix of Material and Font Awesome. Phosphor draws five battery
+  levels where Omarchy ramps through ten, so the thresholds are wider.
 - The **active workspace shows a dot** (`󱓻`) instead of its number, and
   workspaces 1–5 are always present. AeroSpace has no `persistent-workspaces`
   setting, so `plugins/workspaces.sh` unions its live list with `$WS_PERSISTENT`.
@@ -303,9 +308,11 @@ Installed by `install.sh`:
 - `blueutil` — acting on Bluetooth devices in the bluetooth menu
 - `switchaudio-osx` — output device switching in the volume menu (optional:
   without it the menu simply drops its "Ausgabe" section)
-- `font-cascadia-code-nf` (cask) — the bar's text and glyphs. The Nerd Font
-  build, so icons come from the same family as the text; its glyphs are drawn
-  smaller than JetBrainsMono's, which is why `ICON_FONT` runs 3pt above
-  `LABEL_FONT`
+- `font-cascadia-code-nf` (cask) — the bar's text
+- Phosphor (`config/sketchybar/fonts/`, MIT) — every icon. Vendored rather than
+  installed by Homebrew, which has no cask for it; `install.sh` copies it into
+  `~/Library/Fonts`. `lib/icons.sh` names each glyph and notes the Phosphor
+  icon name beside it, so one can be looked up on phosphoricons.com without
+  decoding a codepoint
 - `jq` — used by several plugins (macOS ships one at `/usr/bin/jq`)
 - `raycast` (cask) — launcher
