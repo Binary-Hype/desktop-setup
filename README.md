@@ -68,6 +68,54 @@ Raycast keeps its settings in your Raycast account rather than on disk.
   plain `6`. The repo copy keeps the bar-aware value, so adding sketchybar
   later and re-running `./install.sh --only aerospace` restores it.
 
+## Uninstall
+
+```bash
+./uninstall.sh --dry-run   # see exactly what it would remove
+./uninstall.sh
+```
+
+It reverses `install.sh`: stops the services, deletes the configs from
+`~/.config` (including the `*.backup-*` copies `install.sh` left behind),
+removes the vendored Phosphor fonts, uninstalls the Homebrew packages, and
+drops `nikitabobko/tap` / `felixkratz/formulae` once nothing else needs them.
+Stale launch agents and preference files go too, so nothing is left to
+confuse a later reinstall.
+
+It takes the same component flags as `install.sh` (`--only`, `--skip`,
+`--aerospace` …), plus:
+
+| flag | effect |
+|---|---|
+| `--dry-run` | print everything, change nothing |
+| `--yes` | skip the confirmation prompt |
+| `--backup` | move configs to `~/desktop-setup-removed-<timestamp>` instead of deleting |
+| `--keep-deps` | leave the Homebrew packages installed |
+| `--keep-configs` | leave `~/.config` alone |
+| `--keep-fonts` | leave the Phosphor fonts in `~/Library/Fonts` |
+| `--include-shared` | also remove `jq` |
+| `--autoremove` | run `brew autoremove` at the end |
+
+It asks you to type `yes` before touching anything, and Homebrew itself is
+never removed.
+
+**What it deliberately will not delete:**
+
+- **Anything Homebrew does not own.** Preferences and support folders are only
+  removed once the app they belong to is actually gone, so `--keep-deps` never
+  strips the settings of a program that is still installed. Raycast is the
+  common case: if you installed it from the website rather than as a cask, the
+  script skips it entirely and asks separately when it *is* a cask — it is a
+  general launcher, not really part of this setup.
+- **`jq`**, unless you pass `--include-shared`. `install.sh` only installs it
+  when it is missing, and plenty of other things use it.
+- **A tap another project still needs.** `--only sketchybar` keeps
+  `felixkratz/formulae` around for `borders`.
+
+Reverting the menu-bar and Dock auto-hide, and clearing AeroSpace's stale
+Accessibility entry, cannot be scripted — the script prints those as manual
+steps at the end.
+
 ## Update the repo from this machine
 
 ```bash
