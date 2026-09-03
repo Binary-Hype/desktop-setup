@@ -72,12 +72,17 @@ export WS_ACTIVE_FONT="Phosphor-Fill:Regular:9.0"
 
 # --- Menus (popups) -----------------------------------------------------------
 export MENU_WIDTH=290
-export MENU_LABEL_WIDTH=232
+# MENU_WIDTH minus the icon column: icon.padding_left (12) + the Phosphor
+# advance (~31pt at 16pt) + icon.padding_right (8).
+export MENU_LABEL_WIDTH=239
 export MENU_ROW_HEIGHT=26
 export MENU_ROW_BG_IDLE=0x00000000
 # Keeps a row's background off the popup's own border. Flush against it, the
 # rounded corners of each row poked through the border as little wedges down
-# the popup's left edge.
+# the popup's left edge. It has to be the SAME on every row: background padding
+# widens the item it sits on, so a row with more of it makes the whole popup
+# wider than the rest -- which showed up as a hover highlight that reached the
+# left border but stopped ~20pt short of the right one.
 export MENU_ROW_INSET=3
 export MENU_BG_CORNER_RADIUS=6
 export MENU_BG_BORDER_WIDTH=2

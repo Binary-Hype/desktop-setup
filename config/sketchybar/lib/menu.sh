@@ -66,6 +66,8 @@ menu_row() {
               display=active
               drawing=off
               "width=$MENU_WIDTH"
+              padding_left=0
+              padding_right=0
               icon.padding_left=12
               icon.padding_right=8
               "label.width=$MENU_LABEL_WIDTH"
@@ -95,6 +97,8 @@ menu_header() {
               drawing=off
               icon.drawing=off
               "width=$MENU_WIDTH"
+              padding_left=0
+              padding_right=0
               "label=$text"
               "label.width=$MENU_LABEL_WIDTH"
               label.align=left
@@ -118,12 +122,14 @@ menu_separator() {
               icon.drawing=off
               label.drawing=off
               "width=$MENU_WIDTH"
+              padding_left=0
+              padding_right=0
               background.drawing=on
               "background.color=$color2"
               background.height=1
               background.corner_radius=0
-              background.padding_left=12
-              background.padding_right=12 )
+              "background.padding_left=$MENU_ROW_INSET"
+              "background.padding_right=$MENU_ROW_INSET" )
 }
 
 # menu_set NAME ICON LABEL COLOR [CLICK] -- fill a clickable row.
