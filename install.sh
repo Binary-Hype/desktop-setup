@@ -18,6 +18,9 @@
 #   --dry-run       print what would happen, change nothing
 #   --no-deps       skip Homebrew, only place configs and restart
 #   --no-services   place configs but do not start/restart anything
+#
+# To take all of it off again, see ./uninstall.sh -- it reverses this script
+# and takes the same --only / --skip component flags.
 
 set -euo pipefail
 
@@ -38,7 +41,10 @@ NO_SERVICES=false
 SELECTED=()
 SKIPPED=()
 
-usage() { sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; }
+# Print the header block: every comment line after the shebang, up to the
+# first line that is not a comment. Deliberately not a fixed line range --
+# that silently starts printing code as soon as the header grows.
+usage() { awk 'NR==1{next} /^#/{sub(/^# ?/,""); print; next} {exit}' "$0"; }
 
 list_components() {
   cat <<'LIST'

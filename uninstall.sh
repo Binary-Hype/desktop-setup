@@ -21,6 +21,8 @@
 #   --keep-fonts       leave the Phosphor fonts in ~/Library/Fonts
 #   --include-shared   also remove jq (general-purpose, kept by default)
 #   --autoremove       run 'brew autoremove' at the end to drop orphaned deps
+#
+# The other direction is ./install.sh.
 
 set -euo pipefail
 
@@ -43,7 +45,8 @@ AUTOREMOVE=false
 SELECTED=()
 SKIPPED=()
 
-usage() { sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; }
+# See the note on install.sh's usage(): read the header, do not count lines.
+usage() { awk 'NR==1{next} /^#/{sub(/^# ?/,""); print; next} {exit}' "$0"; }
 
 list_components() {
   cat <<'LIST'
