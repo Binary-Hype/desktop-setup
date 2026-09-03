@@ -53,14 +53,16 @@ exec-on-workspace-change = ['/bin/bash', '-c',
 ]
 
 # ── Gaps ─────────────────────────────────────────────────────────────────────
+# Windows are spaced from each other and from the bar, but sit flush against
+# every other screen edge: only inner.* and outer.top are non-zero.
 # outer.top   = SketchyBar height (check with: sketchybar --query bar | grep height)
-# outer.bottom is already small; if the bottom still looks empty, the macOS
-# Dock is the culprit — auto-hide it via System Settings → Dock → Auto-hide.
+# If the bottom still looks empty despite outer.bottom = 0, the macOS Dock is
+# the culprit — auto-hide it via System Settings → Dock → Auto-hide.
 [gaps]
 inner.horizontal = 6
 inner.vertical   = 6
-outer.left       = 6
-outer.right      = 6
+outer.left       = 0
+outer.right      = 0
 # Derived from the SketchyBar geometry in ~/.config/sketchybar/variables.sh:
 #   BAR_Y_OFFSET (0) + BAR_HEIGHT (26) = 26pt of bar, + 1pt gap = 27.
 # Change either of those and this number has to follow.
@@ -77,7 +79,7 @@ outer.right      = 6
 # monitor regex is case-sensitive; it cannot collide with "MPG321UR-QD"
 # or "LG ULTRAFINE".
 outer.top        = [{ monitor."[Bb]uilt-[Ii]n" = 0 }, 27]
-outer.bottom     = 6
+outer.bottom     = 0
 
 
 # ── Main bindings ─────────────────────────────────────────────────────────────

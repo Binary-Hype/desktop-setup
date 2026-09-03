@@ -252,6 +252,10 @@ inside the notch inset. Externals get `27`.
 depending on whether the built-in is the *main* display (menu bar present) or a
 secondary one.
 
+Windows sit flush against the left, right and bottom screen edges
+(`outer.left/right/bottom = 0`); only `inner.*` and `outer.top` add space, so
+the gaps are between windows and toward the bar.
+
 **2. Monitor names.** The per-monitor rule matches `[Bb]uilt-[Ii]n`. A
 non-matching pattern falls back silently to the default value, so if the gap
 looks wrong on one display, check the name with `aerospace list-monitors`.
