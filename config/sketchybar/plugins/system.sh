@@ -88,7 +88,7 @@ case "$1" in
 esac
 
 case "$SENDER" in
-"mouse.exited.global" | "front_app_switched" | "display_change" | "space_change")
+"mouse.exited.global" | "display_change" | "space_change")
   menu_close system
   ;;
 "mouse.clicked")

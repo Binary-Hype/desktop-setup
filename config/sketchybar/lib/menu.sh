@@ -44,12 +44,14 @@ menu_item() {
               "popup.background.border_color=$ACCENT_COLOR"
           # mouse.exited.global fires once the pointer has left the bar AND
           # every popup row, which is the closest thing sketchybar offers to
-          # "clicked somewhere else"; front_app_switched covers clicking into
-          # another window. display_change/space_change: popup rows are bound
-          # to the display they were built on, so dismiss rather than strand an
-          # empty frame on the monitor we just moved to.
+          # "clicked somewhere else" -- you have to move the pointer there
+          # anyway. front_app_switched is deliberately NOT used: it also fires
+          # for a screenshot hotkey, which made an open menu impossible to
+          # capture. display_change/space_change: popup rows are bound to the
+          # display they were built on, so dismiss rather than strand an empty
+          # frame on the monitor we just moved to.
           --subscribe "$name" mouse.clicked mouse.exited.global \
-                              front_app_switched display_change space_change )
+                              display_change space_change )
 }
 
 # menu_row PARENT NAME -- a clickable entry. Hidden until a plugin fills it.
@@ -115,9 +117,7 @@ menu_separator() {
               background.height=1
               background.corner_radius=0
               background.padding_left=12
-              background.padding_right=12
-              y_offset=0
-              height=9 )
+              background.padding_right=12 )
 }
 
 # menu_set NAME ICON LABEL COLOR [CLICK] -- fill a clickable row.

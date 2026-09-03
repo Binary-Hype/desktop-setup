@@ -16,15 +16,27 @@ populate() {
   ARGS=()
   ARGS+=( --set clock.date label="$(date '+%d.%m.%Y')" )
 
-  # `cal` pads its output with a trailing blank line; skip empty rows so the
-  # popup's bottom spacing comes from clock.pad_bottom alone.
+  # Every `cal` line is 22 columns wide, but CoreText ignores trailing
+  # whitespace when it measures a string: a short last week ("27 28 29 30" plus
+  # eleven spaces) measured as 11 columns, so the centred row drifted right,
+  # out from under the columns above it. Swapping those trailing spaces for
+  # non-breaking ones restores a uniform measured width, and the grid lines up.
+  # `cal` also ends with a blank line -- dropped here, the bottom spacing comes
+  # from clock.pad_bottom.
+  local nbsp
+  nbsp=$(printf '\302\240')
+
   local i=0 line
   while IFS= read -r line; do
     [ "$i" -ge "$CAL_ROWS" ] && break
-    [ -z "${line// /}" ] && continue
     ARGS+=( --set "clock.cal.$i" drawing=on "label=$line" )
     i=$((i + 1))
-  done < <(cal)
+  done < <(cal | grep -v '^[[:space:]]*$' | awk -v n="$nbsp" '{
+      s = $0; w = length($0)
+      sub(/[[:space:]]+$/, "", s)
+      for (j = length(s); j < w; j++) s = s n
+      print s
+    }')
 
   menu_hide_range clock.cal "$i" $((CAL_ROWS - 1))
   menu_flush
@@ -38,7 +50,7 @@ case "$1" in
 esac
 
 case "$SENDER" in
-"mouse.exited.global" | "front_app_switched" | "display_change" | "space_change")
+"mouse.exited.global" | "display_change" | "space_change")
   menu_close clock
   ;;
 "mouse.clicked")

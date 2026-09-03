@@ -12,14 +12,19 @@ CLOCK_POPUP_WIDTH=$MENU_WIDTH
 menu_item clock right right
 ARGS+=( --set clock update_freq=10 icon.drawing=off )
 
-# Blank rows top and bottom. A popup row's height comes from its font, so an
-# item with nothing drawn is the way to keep the clock off the popup border.
+# Blank rows top and bottom, so the clock and the grid do not sit against the
+# popup border. A row's height comes from its label, and an empty or all-space
+# label measures as nothing -- CoreText ignores trailing whitespace. A
+# non-breaking space is whitespace it does measure.
+NBSP=$(printf '\302\240')
+
 spacer() {
   ARGS+=( --add item "$1" popup.clock
           --set "$1"
               "width=$CLOCK_POPUP_WIDTH"
               icon.drawing=off
-              label.drawing=off
+              "label=$NBSP"
+              "label.font=JetBrainsMono Nerd Font:Regular:7.0"
               background.drawing=off )
 }
 
