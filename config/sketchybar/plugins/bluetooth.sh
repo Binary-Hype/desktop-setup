@@ -1,48 +1,27 @@
 #!/bin/bash
 
-# Source Colors
-if [ -f "$HOME/.cache/wal/sketchybar_colors.sh" ]; then
-    source "$HOME/.cache/wal/sketchybar_colors.sh"
-else
-    source "$CONFIG_DIR/colors.sh"
-fi
+source "$CONFIG_DIR/lib/common.sh"
+source "$CONFIG_DIR/lib/menu.sh"
 
-# Source Layout Variables
-source "$CONFIG_DIR/variables.sh"
+SELF="$PLUGIN_DIR/bluetooth.sh"
+BLUEUTIL=$(bin_path blueutil)
 
-# Resolve blueutil rather than hardcoding a prefix: Homebrew lives in
-# /opt/homebrew on Apple Silicon and /usr/local on Intel, and sketchybar's
-# launchd environment does not always carry either on PATH.
-BLUEUTIL=$(command -v blueutil 2>/dev/null)
-[ -x "$BLUEUTIL" ] || for C in /opt/homebrew/bin/blueutil /usr/local/bin/blueutil; do
-    [ -x "$C" ] && BLUEUTIL="$C" && break
-done
-SELF="$CONFIG_DIR/plugins/bluetooth.sh"
-
-BT_POPUP_WIDTH=290
-BT_LABEL_WIDTH=240
-BT_ROW_HEIGHT=26
-BT_ROW_BG_IDLE=0x00000000
 BT_MAX_CONNECTED=8
-BT_MAX_OTHER=24
+BT_MAX_OTHER=20
 
-CACHE="/tmp/sketchybar_bt_devices.$(id -u).cache"
+CACHE="/tmp/sketchybar_bt.$(id -u).cache"
 CACHE_TTL=5
 
-# sketchybar passes the item name in $NAME. Stash it: the device loop reads
-# into its own variables and $NAME must survive that.
-ITEM_NAME="${NAME:-bluetooth}"
-
 # ── Device inventory ──────────────────────────────────────────────────────────
-# system_profiler is the source of truth for names/types/connection state --
+# system_profiler is the source of truth for names, types and connection state:
 # it needs no Bluetooth privacy grant and reports the device class, which
-# blueutil does not. blueutil is used only to act (power/connect/disconnect).
+# blueutil does not. blueutil is used only to act (power, connect, disconnect).
 #
 # Emits TSV: connected(1|0) \t type \t address \t name
 # No field may be empty: bash treats tab as IFS whitespace, so a blank column
 # would collapse and shift every field after it (hence type -> "unknown").
 # Ordered the way the macOS picker does it: connected first, then audio, then
-# input devices, then everything else; alphabetical within each group.
+# input devices, then the rest; alphabetical within each group.
 scan_devices() {
   system_profiler SPBluetoothDataType -json 2>/dev/null | jq -r '
     def trank:
@@ -65,36 +44,13 @@ scan_devices() {
     | @tsv'
 }
 
-# system_profiler costs ~80ms, and both the bar item (every 15s) and the popup
-# ask for the same data. Cache it briefly; invalidate_cache() drops it the
-# moment we change something ourselves.
 list_devices() {
-  local AGE=99999
-  if [ -s "$CACHE" ]; then
-    AGE=$(( $(date +%s) - $(stat -f %m "$CACHE" 2>/dev/null || echo 0) ))
-  fi
-
-  if [ "$AGE" -lt "$CACHE_TTL" ]; then
-    cat "$CACHE"
-    return
-  fi
-
-  local OUT
-  OUT=$(scan_devices)
-  # Only replace a good cache with a non-empty scan.
-  if [ -n "$OUT" ]; then
-    printf '%s\n' "$OUT" > "$CACHE.tmp.$$" && mv -f "$CACHE.tmp.$$" "$CACHE"
-    printf '%s\n' "$OUT"
-  else
-    [ -s "$CACHE" ] && cat "$CACHE"
-  fi
+  cache_get "$CACHE" "$CACHE_TTL" && return
+  scan_devices | cache_put "$CACHE" || cat "$CACHE" 2>/dev/null
 }
 
-invalidate_cache() { rm -f "$CACHE"; }
-
-# Sets $ICON_OUT rather than echoing: $(...) would fork a subshell per device,
-# and this runs once per row on every popup refresh.
-ICON_OUT=""
+# Sets ICON_OUT rather than echoing: $(...) would fork a subshell per device,
+# and this runs once per row on every refresh.
 icon_for() {
   shopt -s nocasematch
   case "$1" in
@@ -111,193 +67,129 @@ icon_for() {
   shopt -u nocasematch
 }
 
-# ── Popup refresh ─────────────────────────────────────────────────────────────
-# Rows already exist (created once in items/bluetooth.sh). We only --set them,
-# and hide the slots we do not need. Everything goes out in ONE sketchybar
-# call: issuing them separately cost ~35 IPC round-trips (~240ms).
-
-ARGS=()
-
-fill_row() {
-  ARGS+=( --set "$1"
-              drawing=on
-              "icon=$2"
-              "icon.color=$4"
-              "label=$3"
-              "label.color=$4"
-              "click_script=$5" )
-}
-
-refresh_popup() {
+populate() {
   ARGS=()
+  local power
+  power=$("$BLUEUTIL" --power 2>/dev/null)
 
-  local POWER
-  POWER=$("$BLUEUTIL" --power 2>/dev/null)
-
-  if [ "$POWER" != "1" ]; then
-    ARGS+=( --set bluetooth.power icon="󰂲" label="Bluetooth: Off"
-            "icon.color=$color3" "label.color=$color3" )
-    ARGS+=( --set bluetooth.hdr.connected drawing=off )
-    ARGS+=( --set bluetooth.hdr.other drawing=off )
-    local i
-    for i in $(seq 0 $((BT_MAX_CONNECTED - 1))); do ARGS+=( --set "bluetooth.device.c.$i" drawing=off ); done
-    for i in $(seq 0 $((BT_MAX_OTHER - 1)));     do ARGS+=( --set "bluetooth.device.o.$i" drawing=off ); done
-    sketchybar "${ARGS[@]}"
+  if [ "$power" != "1" ]; then
+    menu_set bluetooth.power "󰂲" "Bluetooth: Aus" "$color3" "$SELF toggle_power"
+    ARGS+=( --set bluetooth.hdr.connected drawing=off
+            --set bluetooth.hdr.other     drawing=off )
+    menu_hide_range bluetooth.dev.c 0 $((BT_MAX_CONNECTED - 1))
+    menu_hide_range bluetooth.dev.o 0 $((BT_MAX_OTHER - 1))
+    menu_set bluetooth.settings "󰒓" "Bluetooth-Einstellungen…" "$color7" "$SELF settings"
+    ARGS+=( --set bluetooth.sep drawing=on )
+    menu_flush
     return
   fi
 
-  ARGS+=( --set bluetooth.power icon="󰂯" label="Bluetooth: On"
-          "icon.color=$ACCENT_COLOR" "label.color=$ITEM_COLOR" )
+  menu_set bluetooth.power "󰂯" "Bluetooth: An" "$ACCENT_COLOR" "$SELF toggle_power"
 
-  local CONN_I=0 OTHER_I=0 SLOT COLOR
-  while IFS=$'\t' read -r DEV_CONN DEV_TYPE DEV_ADDR DEV_NAME; do
-    [ -z "$DEV_ADDR" ] && continue
-    icon_for "$DEV_TYPE"
+  local conn=0 other=0 slot color
+  while IFS=$'\t' read -r dev_conn dev_type dev_addr dev_name; do
+    [ -z "$dev_addr" ] && continue
+    icon_for "$dev_type"
 
-    if [ "$DEV_CONN" = "1" ]; then
-      [ "$CONN_I" -ge "$BT_MAX_CONNECTED" ] && continue
-      SLOT="bluetooth.device.c.$CONN_I"; COLOR="$ACCENT_COLOR"
-      CONN_I=$((CONN_I + 1))
+    if [ "$dev_conn" = "1" ]; then
+      [ "$conn" -ge "$BT_MAX_CONNECTED" ] && continue
+      slot="bluetooth.dev.c.$conn"; color="$ACCENT_COLOR"
+      conn=$((conn + 1))
     else
-      [ "$OTHER_I" -ge "$BT_MAX_OTHER" ] && continue
-      SLOT="bluetooth.device.o.$OTHER_I"; COLOR="$color7"
-      OTHER_I=$((OTHER_I + 1))
+      [ "$other" -ge "$BT_MAX_OTHER" ] && continue
+      slot="bluetooth.dev.o.$other"; color="$color7"
+      other=$((other + 1))
     fi
 
-    fill_row "$SLOT" "$ICON_OUT" "$DEV_NAME" "$COLOR" \
-             "$SELF toggle_device '$DEV_ADDR'"
+    menu_set "$slot" "$ICON_OUT" "$dev_name" "$color" "$SELF toggle_device '$dev_addr'"
   done < <(list_devices)
 
-  # Hide the slots we did not use, and any header with an empty section.
-  local i
-  for i in $(seq "$CONN_I"  $((BT_MAX_CONNECTED - 1))); do ARGS+=( --set "bluetooth.device.c.$i" drawing=off ); done
-  for i in $(seq "$OTHER_I" $((BT_MAX_OTHER - 1)));     do ARGS+=( --set "bluetooth.device.o.$i" drawing=off ); done
+  menu_hide_range bluetooth.dev.c "$conn"  $((BT_MAX_CONNECTED - 1))
+  menu_hide_range bluetooth.dev.o "$other" $((BT_MAX_OTHER - 1))
 
-  if [ "$CONN_I" -gt 0 ]; then ARGS+=( --set bluetooth.hdr.connected drawing=on )
-  else                         ARGS+=( --set bluetooth.hdr.connected drawing=off ); fi
-  if [ "$OTHER_I" -gt 0 ]; then ARGS+=( --set bluetooth.hdr.other drawing=on )
-  else                          ARGS+=( --set bluetooth.hdr.other drawing=off ); fi
-  ARGS+=( --set bluetooth.hdr.sep drawing=on )
+  if [ "$conn" -gt 0 ];  then ARGS+=( --set bluetooth.hdr.connected drawing=on )
+  else                        ARGS+=( --set bluetooth.hdr.connected drawing=off ); fi
+  if [ "$other" -gt 0 ]; then ARGS+=( --set bluetooth.hdr.other drawing=on )
+  else                        ARGS+=( --set bluetooth.hdr.other drawing=off ); fi
 
-  sketchybar "${ARGS[@]}"
+  menu_set bluetooth.settings "󰒓" "Bluetooth-Einstellungen…" "$color7" "$SELF settings"
+  ARGS+=( --set bluetooth.sep drawing=on )
+  menu_flush
 }
 
-# ── Bar item ──────────────────────────────────────────────────────────────────
-
 update_bar_item() {
-  local POWER
-  POWER=$("$BLUEUTIL" --power 2>/dev/null)
+  local item="${NAME:-bluetooth}" power
+  power=$("$BLUEUTIL" --power 2>/dev/null)
 
   # Distinguish "radio is off" (0) from "blueutil could not answer" (empty).
   # Right after a wake the Bluetooth API is briefly unavailable; treating that
-  # as "off" swapped the icon and hid the label, then reverted a tick later --
-  # visible as flicker. Leave the item exactly as it is instead.
-  [ -z "$POWER" ] && return
+  # as "off" swapped the icon and reverted a tick later -- visible as flicker.
+  # Leave the item exactly as it is instead.
+  [ -z "$power" ] && return
 
-  if [ "$POWER" != "1" ]; then
-    sketchybar --set "$ITEM_NAME" icon="󰂲" icon.color="$color3" label.drawing=off
+  if [ "$power" != "1" ]; then
+    sketchybar --set "$item" icon="󰂲" icon.color="$color3" label.drawing=off
     return
   fi
 
-  local LINE DEV_TYPE DEV_NAME
-  LINE=$(list_devices | awk -F'\t' '$1=="1"' | head -1)
-
-  if [ -z "$LINE" ]; then
-    sketchybar --set "$ITEM_NAME" icon="󰂯" icon.color="$ITEM_COLOR" label.drawing=off
-    return
+  # Omarchy: format-connected "󰂱", format "" (plain) -- icon only, no name.
+  if [ -n "$(list_devices | awk -F'\t' '$1=="1"' | head -1)" ]; then
+    sketchybar --set "$item" icon="󰂱" icon.color="$ACCENT_COLOR" label.drawing=off
+  else
+    sketchybar --set "$item" icon="󰂯" icon.color="$ITEM_COLOR" label.drawing=off
   fi
-
-  DEV_TYPE=$(echo "$LINE" | cut -f2)
-  DEV_NAME=$(echo "$LINE" | cut -f4)
-  icon_for "$DEV_TYPE"
-
-  local SHORT="${DEV_NAME:0:14}"
-  [ "${#DEV_NAME}" -gt 14 ] && SHORT="${SHORT}…"
-
-  sketchybar --set "$ITEM_NAME" \
-    icon="$ICON_OUT" \
-    icon.color="$ACCENT_COLOR" \
-    label="$SHORT" label.drawing=on
 }
-
-# ── Click actions (dispatched via click_script arguments) ─────────────────────
 
 case "$1" in
 "populate")
-  refresh_popup
-  exit 0
-  ;;
-"row_hover")
-  case "$SENDER" in
-  "mouse.entered")
-    sketchybar --set "$ITEM_NAME" background.color="$ITEM_BG_COLOR"
-    ;;
-  "mouse.exited" | "mouse.exited.global")
-    sketchybar --set "$ITEM_NAME" background.color="$BT_ROW_BG_IDLE"
-    ;;
-  esac
+  populate
   exit 0
   ;;
 "toggle_power")
-  if [ "$("$BLUEUTIL" --power)" = "1" ]; then
-    "$BLUEUTIL" --power 0
-  else
-    "$BLUEUTIL" --power 1
-  fi
+  if [ "$("$BLUEUTIL" --power)" = "1" ]; then "$BLUEUTIL" --power 0; else "$BLUEUTIL" --power 1; fi
   sleep 1
-  invalidate_cache
+  cache_drop "$CACHE"
   update_bar_item
-  refresh_popup
+  populate
   exit 0
   ;;
 "toggle_device")
   ADDR="$2"
   WAS_CONNECTED=$("$BLUEUTIL" --is-connected "$ADDR")
-  if [ "$WAS_CONNECTED" = "1" ]; then
-    "$BLUEUTIL" --disconnect "$ADDR"
-  else
-    "$BLUEUTIL" --connect "$ADDR"
-  fi
+  if [ "$WAS_CONNECTED" = "1" ]; then "$BLUEUTIL" --disconnect "$ADDR"; else "$BLUEUTIL" --connect "$ADDR"; fi
 
-  # Poll until the radio actually reports the new state (a connect can take a
-  # few seconds) so the redrawn popup shows the result rather than the old
-  # state. Give up after ~6s and redraw whatever is true by then.
+  # Poll until the radio reports the new state (a connect can take a few
+  # seconds) so the redrawn menu shows the result rather than the old state.
+  # Give up after ~6s and draw whatever is true by then.
   for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do
     [ "$("$BLUEUTIL" --is-connected "$ADDR")" != "$WAS_CONNECTED" ] && break
     sleep 0.5
   done
 
-  invalidate_cache
+  cache_drop "$CACHE"
   update_bar_item
-  # Refresh in place and leave the popup open, so the new state is visible
+  # Refresh in place and leave the menu open, so the new state is visible
   # without having to reopen it.
-  refresh_popup
+  populate
   exit 0
   ;;
-"open_settings")
+"settings")
+  menu_close bluetooth
   open "x-apple.systempreferences:com.apple.BluetoothSettings"
-  sketchybar --set bluetooth popup.drawing=off
   exit 0
   ;;
 esac
 
-# ── Event dispatch ────────────────────────────────────────────────────────────
-
 case "$SENDER" in
 "display_change" | "space_change")
-  # Popup rows are bound to the display they were built on; dismiss rather
-  # than leave an empty frame behind on the monitor we just moved to.
-  sketchybar --set bluetooth popup.drawing=off
+  menu_close bluetooth
   ;;
 "mouse.clicked")
-  if [ "$(sketchybar --query bluetooth | jq -r '.popup.drawing')" = "on" ]; then
-    sketchybar --set "$ITEM_NAME" popup.drawing=off
+  if menu_is_open bluetooth; then
+    menu_close bluetooth
   else
-    # Show immediately -- the rows already hold the last known state -- then
-    # refresh them in place. Building before showing is what made the popup
-    # appear empty and fill in afterwards.
-    sketchybar --set "$ITEM_NAME" popup.drawing=on
-    refresh_popup
+    menu_open bluetooth
+    populate
   fi
   ;;
 *)

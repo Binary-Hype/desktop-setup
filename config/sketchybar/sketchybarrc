@@ -1,17 +1,18 @@
 #!/bin/bash
+#
+# SketchyBar, laid out after Omarchy's Waybar (basecamp/omarchy) with one
+# deliberate difference: the clock sits on the RIGHT, not in the centre. The
+# MacBook's notch occupies the middle of the built-in display, and a centred
+# module disappears behind it.
+#
+#   left    logo  workspaces
+#   center  --                          (notch)
+#   right   bluetooth network volume system battery   clock
+#
+# Clicking any of those opens a popup menu (lib/menu.sh), never an app window.
 
-PLUGIN_DIR="$CONFIG_DIR/plugins"
-ITEM_DIR="$CONFIG_DIR/items"
-
-# Source Colors
-if [ -f "$HOME/.cache/wal/sketchybar_colors.sh" ]; then
-    source "$HOME/.cache/wal/sketchybar_colors.sh"
-else
-    source "$CONFIG_DIR/colors.sh"
-fi
-
-# Source Layout Variables
-source "$CONFIG_DIR/variables.sh"
+source "$CONFIG_DIR/lib/common.sh"
+source "$CONFIG_DIR/lib/menu.sh"
 
 ##### Bar Appearance #####
 sketchybar --bar \
@@ -26,78 +27,55 @@ sketchybar --bar \
     margin=$BAR_MARGIN                      \
     corner_radius=$BAR_CORNER_RADIUS        \
     border_width=$BAR_BORDER_WIDTH          \
-    color="$BAR_COLOR"                      \
-    border_color="$BAR_COLOR"
+    color="$BAR_COLOR"
 
 ##### Item Defaults #####
 sketchybar --default \
-    updates=$ITEM_UPDATES                                  \
-    icon.font="$ICON_FONT"                                 \
-    icon.color="$ITEM_COLOR"                                   \
-    icon.highlight_color="$ACCENT_COLOR"                   \
-    icon.padding_left=$ICON_PADDING_LEFT                   \
-    icon.padding_right=$ICON_PADDING_RIGHT                 \
-    icon.drawing=$ICON_DRAWING                             \
-    label.font="$LABEL_FONT"                               \
-    label.color="$TEXT_COLOR"                                  \
-    label.highlight_color="$ACCENT_COLOR"                  \
-    label.padding_left=$LABEL_PADDING_LEFT                 \
-    label.padding_right=$LABEL_PADDING_RIGHT               \
-    label.drawing=$LABEL_DRAWING                           \
-    background.border_color="$DEFAULT_BORDER_COLOR"        \
-    background.color="$BAR_COLOR"                          \
-    background.corner_radius=$ITEM_BG_CORNER_RADIUS        \
-    background.height=$ITEM_BG_HEIGHT                      \
-    padding_left=$ITEM_PADDING_LEFT                        \
-    padding_right=$ITEM_PADDING_RIGHT                      \
-    popup.background.color=$ITEM_BG_COLOR                  \
-    popup.background.corner_radius=$POPUP_BG_CORNER_RADIUS \
-    popup.background.border_width=$POPUP_BG_BORDER_WIDTH   \
-    popup.background.border_color=$ACCENT_COLOR            \
-    popup.y_offset=$POPUP_Y_OFFSET
+    updates=$ITEM_UPDATES                          \
+    icon.font="$ICON_FONT"                         \
+    icon.color="$ITEM_COLOR"                       \
+    icon.highlight_color="$ACCENT_COLOR"           \
+    icon.padding_left=$ICON_PADDING_LEFT           \
+    icon.padding_right=$ICON_PADDING_RIGHT         \
+    icon.drawing=$ICON_DRAWING                     \
+    label.font="$LABEL_FONT"                       \
+    label.color="$TEXT_COLOR"                      \
+    label.highlight_color="$ACCENT_COLOR"          \
+    label.padding_left=$LABEL_PADDING_LEFT         \
+    label.padding_right=$LABEL_PADDING_RIGHT       \
+    label.drawing=$LABEL_DRAWING                   \
+    background.drawing=off                         \
+    background.color="$BAR_COLOR"                  \
+    background.corner_radius=$ITEM_BG_CORNER_RADIUS \
+    background.height=$ITEM_BG_HEIGHT              \
+    padding_left=$ITEM_PADDING_LEFT                \
+    padding_right=$ITEM_PADDING_RIGHT
 
-
+# Fired by AeroSpace (see aerospace.toml: on-focus-changed and
+# exec-on-workspace-change).
 sketchybar --add event aerospace_workspace_change
 
 ##### Items #####
 
-# Left
-
-# Hidden manager item: subscribes to workspace changes and dynamically
-# adds/removes/reorders/styles all space.* items. This is what makes the
-# bar react to workspaces that are created after startup.
-sketchybar --add item workspace_manager left \
-           --set workspace_manager \
-               drawing=off \
-               updates=on \
-               script="$CONFIG_DIR/plugins/workspace_manager.sh" \
-           --subscribe workspace_manager aerospace_workspace_change
-
-# Seed the bar with whatever workspaces already exist at startup.
-# workspace_manager will handle any that appear later.
-for WORKSPACE in $(aerospace list-workspaces --all); do
-    sketchybar --add item "space.$WORKSPACE" left \
-               --set "space.$WORKSPACE" \
-                   label="$WORKSPACE" \
-                   label.align=center \
-                   label.width=dynamic \
-                   background.drawing=off \
-                   click_script="aerospace workspace $WORKSPACE"
-    # No --subscribe here: workspace_manager handles all visual updates
-done
-
-# -- Center --
-source "$ITEM_DIR/calendar.sh"
+# -- Left --
+source "$ITEM_DIR/logo.sh"
+source "$ITEM_DIR/workspaces.sh"
 
 # -- Right --
+# SketchyBar stacks right-aligned items right-to-left in the order they are
+# added, so the first one here ends up furthest right.
+source "$ITEM_DIR/clock.sh"
 source "$ITEM_DIR/battery.sh"
-source "$ITEM_DIR/network.sh"
-source "$ITEM_DIR/memory.sh"
-source "$ITEM_DIR/cpu.sh"
+source "$ITEM_DIR/system.sh"
 source "$ITEM_DIR/volume.sh"
+source "$ITEM_DIR/network.sh"
 source "$ITEM_DIR/bluetooth.sh"
-
-
 
 ##### Finalize #####
 sketchybar --update
+
+# Seed the workspace items last: plugins/workspaces.sh queries the bar to see
+# which space.* items exist, and that answer is only complete once every item
+# above has been added. Backgrounded so a slow AeroSpace answer does not hold
+# up startup.
+"$PLUGIN_DIR/workspaces.sh" &

@@ -1,115 +1,184 @@
 #!/bin/bash
+#
+# Wi-Fi menu.
+#
+# A note on network names: since macOS 15 the SSID is redacted for any process
+# without Location Services authorisation -- `networksetup -getairportnetwork`
+# lies outright ("not associated" while connected), and system_profiler and
+# `ipconfig getsummary` both return "<redacted>". sketchybar cannot obtain that
+# authorisation. So the connected row reports signal and band rather than a
+# name, and the switchable list comes from the preferred-networks list, which
+# is NOT redacted.
 
-# Source Colors
-if [ -f "$HOME/.cache/wal/sketchybar_colors.sh" ]; then
-    source "$HOME/.cache/wal/sketchybar_colors.sh"
-else
-    source "$CONFIG_DIR/colors.sh"
-fi
+source "$CONFIG_DIR/lib/common.sh"
+source "$CONFIG_DIR/lib/menu.sh"
 
-# Source Layout Variables
-source "$CONFIG_DIR/variables.sh"
+SELF="$PLUGIN_DIR/network.sh"
+NET_MAX_KNOWN=12
 
-# ── Mouse events ──────────────────────────────────────────────────────────────
-case "$SENDER" in
-"mouse.clicked")
+CACHE="/tmp/sketchybar_wifi.$(id -u).cache"
+CACHE_TTL=20
+
+WIFI_IF=$(networksetup -listallhardwareports 2>/dev/null \
+            | awk '/Hardware Port: Wi-Fi/{getline; print $2}')
+
+# ── State ─────────────────────────────────────────────────────────────────────
+# One system_profiler call answers "connected?", signal and channel. It costs
+# ~1s, and both the bar item (every 15s) and the popup want the same data, so
+# the result is cached briefly. Emits "status<TAB>rssi<TAB>channel".
+scan_wifi() {
+  system_profiler SPAirPortDataType -json 2>/dev/null | jq -r '
+    (.SPAirPortDataType[0].spairport_airport_interfaces[0] // {}) as $i
+    | ($i.spairport_current_network_information // {}) as $c
+    | [ ($i.spairport_status_information // "unknown"),
+        (($c.spairport_signal_noise // "") | capture("(?<r>-[0-9]+) dBm").r // ""),
+        ($c.spairport_network_channel // "") ]
+    | @tsv'
+}
+
+wifi_state() {
+  cache_get "$CACHE" "$CACHE_TTL" && return
+  scan_wifi | cache_put "$CACHE" || cat "$CACHE" 2>/dev/null
+}
+
+wifi_power() { networksetup -getairportpower "$WIFI_IF" 2>/dev/null | awk '{print $NF}'; }
+
+# Standard mapping: quality = 2 x (RSSI + 100), clamped 0-100, then Omarchy's
+# five-step icon ramp. -50 dBm -> 100%, -65 -> 70%, -80 -> 40%.
+icon_for_rssi() {
+  local quality
+  quality=$(echo "${1:--70}" | awk '{ q = 2 * ($1 + 100); if (q < 0) q = 0; if (q > 100) q = 100; printf "%.0f", q }')
+  if   [ "$quality" -ge 80 ]; then ICON_OUT="󰤨"
+  elif [ "$quality" -ge 60 ]; then ICON_OUT="󰤥"
+  elif [ "$quality" -ge 40 ]; then ICON_OUT="󰤢"
+  elif [ "$quality" -ge 20 ]; then ICON_OUT="󰤟"
+  else                             ICON_OUT="󰤯"; fi
+  QUALITY_OUT="$quality"
+}
+
+update_bar_item() {
+  local item="${NAME:-network}"
+
+  if [ -z "$WIFI_IF" ] || [ "$(wifi_power)" = "Off" ]; then
+    sketchybar --set "$item" icon="󰤮" icon.color="$color3" label.drawing=off
+    return
+  fi
+
+  local status rssi channel
+  IFS=$'\t' read -r status rssi channel <<< "$(wifi_state)"
+
+  if [ "$status" != "spairport_status_connected" ]; then
+    sketchybar --set "$item" icon="󰤯" icon.color="$ITEM_COLOR" label.drawing=off
+    return
+  fi
+
+  icon_for_rssi "$rssi"
+  sketchybar --set "$item" icon="$ICON_OUT" icon.color="$ITEM_COLOR" label.drawing=off
+}
+
+populate() {
+  ARGS=()
+  local power status rssi channel
+  power=$(wifi_power)
+
+  if [ "$power" != "On" ]; then
+    menu_set network.power "󰤮" "Wi-Fi: Aus" "$color3" "$SELF power on"
+    ARGS+=( --set network.hdr.current drawing=off
+            --set network.current     drawing=off
+            --set network.hdr.known   drawing=off )
+    menu_hide_range network.known 0 $((NET_MAX_KNOWN - 1))
+    menu_set network.settings "󰒓" "Wi-Fi Einstellungen…" "$color7" "$SELF settings"
+    ARGS+=( --set network.sep drawing=on )
+    menu_flush
+    return
+  fi
+
+  menu_set network.power "󰤨" "Wi-Fi: An" "$ACCENT_COLOR" "$SELF power off"
+
+  IFS=$'\t' read -r status rssi channel <<< "$(wifi_state)"
+  if [ "$status" = "spairport_status_connected" ]; then
+    icon_for_rssi "$rssi"
+    # No SSID here on purpose -- see the header comment.
+    menu_info network.current "$ICON_OUT" "${QUALITY_OUT}% · ${rssi:-?} dBm · ${channel:-?}" "$ACCENT_COLOR"
+    ARGS+=( --set network.hdr.current drawing=on )
+  else
+    ARGS+=( --set network.hdr.current drawing=off --set network.current drawing=off )
+  fi
+
+  # Preferred networks: switchable without a password, and the one list macOS
+  # still hands over unredacted.
+  local i=0 ssid
+  while IFS= read -r ssid; do
+    [ -z "$ssid" ] && continue
+    [ "$i" -ge "$NET_MAX_KNOWN" ] && break
+    # A neutral glyph: macOS gives no per-network signal for saved networks,
+    # so a strength icon here would be made up.
+    menu_set "network.known.$i" "󰖩" "$ssid" "$color7" "$SELF connect '$ssid'"
+    i=$((i + 1))
+  done < <(networksetup -listpreferredwirelessnetworks "$WIFI_IF" 2>/dev/null \
+             | tail -n +2 | sed 's/^[[:space:]]*//')
+
+  menu_hide_range network.known "$i" $((NET_MAX_KNOWN - 1))
+  if [ "$i" -gt 0 ]; then ARGS+=( --set network.hdr.known drawing=on )
+  else                    ARGS+=( --set network.hdr.known drawing=off ); fi
+
+  menu_set network.settings "󰒓" "Wi-Fi Einstellungen…" "$color7" "$SELF settings"
+  ARGS+=( --set network.sep drawing=on )
+  menu_flush
+}
+
+case "$1" in
+"populate")
+  populate
+  exit 0
+  ;;
+"power")
+  networksetup -setairportpower "$WIFI_IF" "$2" >/dev/null 2>&1
+  sleep 1
+  cache_drop "$CACHE"
+  update_bar_item
+  populate
+  exit 0
+  ;;
+"connect")
+  # Works without a prompt for a saved network. An unknown one needs the
+  # password, which only the settings pane can ask for -- so fall back to it.
+  if ! networksetup -setairportnetwork "$WIFI_IF" "$2" >/dev/null 2>&1; then
+    menu_close network
+    open "x-apple.systempreferences:com.apple.wifi-settings-extension"
+    exit 0
+  fi
+  # Wait for the radio to actually report the new state, so the redrawn menu
+  # shows the result rather than the state we started from.
+  for _ in 1 2 3 4 5 6 7 8; do
+    sleep 0.5
+    cache_drop "$CACHE"
+    [ "$(wifi_state | cut -f1)" = "spairport_status_connected" ] && break
+  done
+  update_bar_item
+  populate
+  exit 0
+  ;;
+"settings")
+  menu_close network
   open "x-apple.systempreferences:com.apple.wifi-settings-extension"
   exit 0
   ;;
 esac
 
-# ── macOS version ─────────────────────────────────────────────────────────────
-OS_MAJOR=$(sw_vers -productVersion | cut -d. -f1)
-OS_MINOR=$(sw_vers -productVersion | cut -d. -f2)
-OS_MINOR=${OS_MINOR:-0}
-
-# ── 1. Wi-Fi interface ────────────────────────────────────────────────────────
-WIFI_IF=$(networksetup -listallhardwareports \
-  | awk '/Hardware Port: Wi-Fi/{getline; print $2}')
-
-if [ -z "$WIFI_IF" ]; then
-  sketchybar --set "$NAME" icon="󰤭 " icon.color="$ITEM_COLOR" label.drawing=off
-  exit 0
-fi
-
-# ── 2. Power check ────────────────────────────────────────────────────────────
-POWER=$(networksetup -getairportpower "$WIFI_IF" | awk '{print $4}')
-if [ "$POWER" = "Off" ]; then
-  sketchybar --set "$NAME" icon="󰤭 " icon.color="$ITEM_COLOR" label.drawing=off
-  exit 0
-fi
-
-# ── 3. Connection check (version-aware) ───────────────────────────────────────
-# macOS 15+: networksetup -getairportnetwork is removed — check for a live IP instead
-# macOS 13/14: networksetup still works reliably
-CONNECTED=false
-
-if [ "$OS_MAJOR" -ge 15 ]; then
-  IP=$(ifconfig "$WIFI_IF" 2>/dev/null | awk '/inet /{print $2; exit}')
-  [ -n "$IP" ] && CONNECTED=true
-else
-  SSID_INFO=$(networksetup -getairportnetwork "$WIFI_IF" 2>/dev/null)
-  [[ "$SSID_INFO" != *"You are not associated"* ]] && CONNECTED=true
-fi
-
-if [ "$CONNECTED" = false ]; then
-  sketchybar --set "$NAME" icon="󰤯 " icon.color="$ITEM_COLOR" label.drawing=off
-  exit 0
-fi
-
-# ── 4. RSSI retrieval (version-aware) ─────────────────────────────────────────
-# < 14.4  → airport -I          (fast, direct)
-# ≥ 14.4  → airport removed; system_profiler SPAirPortDataType is the only
-#            unprivileged source that still exposes "Signal / Noise" on 14.4+
-#            and on macOS 15 (wdutil redacts all Wi-Fi metadata without a
-#            Developer-ID-signed + Location Services-approved binary)
-RSSI=""
-
-if [ "$OS_MAJOR" -lt 14 ] || { [ "$OS_MAJOR" -eq 14 ] && [ "$OS_MINOR" -lt 4 ]; }; then
-  # macOS < 14.4 — airport is available
-  AIRPORT="/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport"
-  if [ -x "$AIRPORT" ]; then
-    RSSI=$("$AIRPORT" -I 2>/dev/null | awk '/agrCtlRSSI/{print $2}')
+case "$SENDER" in
+"display_change" | "space_change")
+  menu_close network
+  ;;
+"mouse.clicked")
+  if menu_is_open network; then
+    menu_close network
+  else
+    menu_open network
+    populate
   fi
-fi
-
-# macOS ≥ 14.4 (or airport unavailable) — system_profiler fallback
-# Parses: "Signal / Noise: -55 dBm / -95 dBm" → takes first negative number
-if [ -z "$RSSI" ]; then
-  RSSI=$(system_profiler SPAirPortDataType 2>/dev/null \
-    | grep "Signal / Noise" \
-    | grep -Eo '\-[0-9]+' \
-    | head -1)
-fi
-
-# Last resort default (fair signal, avoids division errors downstream).
-# Also guard against a non-numeric value: right after a wake system_profiler
-# can emit partial output, and a non-integer here reached the numeric [ -ge ]
-# comparisons below as a syntax error.
-case "$RSSI" in
-  -[0-9]*) ;;
-  *)       RSSI=-70 ;;
+  ;;
+*)
+  update_bar_item
+  ;;
 esac
-
-# ── 5. RSSI → quality % ──────────────────────────────────────────────────────
-# Standard formula: quality = 2 × (RSSI + 100), clamped 0–100
-# -50 dBm → 100% | -65 dBm → 70% | -80 dBm → 40% | -90 dBm → 20%
-QUALITY=$(echo "$RSSI" | awk '{
-  q = 2 * ($1 + 100)
-  if (q < 0)   q = 0
-  if (q > 100) q = 100
-  printf "%.0f", q
-}')
-
-# ── 6. Icon + color ───────────────────────────────────────────────────────────
-if   [ "$QUALITY" -ge 80 ]; then ICON="󰤨 "; COLOR="$ITEM_COLOR"  # blue   ≥ -60 dBm
-elif [ "$QUALITY" -ge 60 ]; then ICON="󰤥 "; COLOR="$ITEM_COLOR"  # green  -60 to -70
-elif [ "$QUALITY" -ge 40 ]; then ICON="󰤢 "; COLOR="$ITEM_COLOR"  # orange -70 to -80
-else                              ICON="󰤟 "; COLOR="$ITEM_COLOR"  # red    < -80 dBm
-fi
-
-# ── 7. Apply — icon only, no label ───────────────────────────────────────────
-sketchybar --set "$NAME" \
-  icon="$ICON" \
-  icon.color="$COLOR" \
-  label.drawing=off

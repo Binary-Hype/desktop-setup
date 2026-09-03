@@ -6,6 +6,11 @@ macOS tiling setup: **AeroSpace** (window manager) + **SketchyBar** (status bar)
 Based on [SgSiegens/macos-dotfiles](https://github.com/SgSiegens/macos-dotfiles),
 reduced to those three tools and adapted (no pywal — colours are static).
 
+The bar is laid out after [Omarchy](https://github.com/basecamp/omarchy)'s
+Waybar, with one deliberate difference: **the clock sits on the right**, not in
+the centre, because the MacBook's notch owns the middle of the built-in display.
+Clicking a bar icon opens a **popup menu**, never an app window.
+
 ## Install on a new Mac
 
 ```bash
@@ -45,7 +50,8 @@ Components: `aerospace`, `sketchybar`, `borders`, `raycast`.
 | `--no-services` | place configs but start nothing |
 
 Each component carries its own dependencies (`aerospace` → the cask;
-`sketchybar` → the formula, Nerd Font, `blueutil`, `jq`; `borders` → the
+`sketchybar` → the formula, Nerd Font, `blueutil`, `switchaudio-osx`, `jq`;
+`borders` → the
 formula; `raycast` → the cask), so a partial install only pulls what it needs.
 
 `raycast` is **app-only**: it installs the launcher but places no files, because
@@ -58,8 +64,8 @@ Raycast keeps its settings in your Raycast account rather than on disk.
   same colours inlined in `bordersrc`, so `borders` works standalone.
 - `gaps.outer.top` in `aerospace.toml` reserves vertical room for the bar
   (`BAR_Y_OFFSET + BAR_HEIGHT + gap`). Installed **without** sketchybar that
-  would be ~40pt of dead space above every window, so `install.sh` rewrites it
-  to a plain `6`. The repo copy keeps the bar-aware value, so adding sketchybar
+  would be dead space above every window, so `install.sh` rewrites it to a
+  plain `6`. The repo copy keeps the bar-aware value, so adding sketchybar
   later and re-running `./install.sh --only aerospace` restores it.
 
 ## Update the repo from this machine
@@ -81,12 +87,46 @@ config/aerospace/aerospace.toml   workspaces, keybindings, gaps, window rules
 config/aerospace/scripts/         helpers invoked by keybindings
 config/borders/bordersrc          border width + colours (sources colors.sh)
 config/sketchybar/
-  sketchybarrc                    bar layout
-  colors.sh                       THE palette — bar, popups and borders
-  variables.sh                    bar height, offsets, fonts, paddings
-  items/                          item definitions
-  plugins/                        the scripts behind them
+  sketchybarrc                    bar layout — which modules, in what order
+  colors.sh                       THE palette — bar, menus and borders
+  variables.sh                    geometry, fonts, paddings, menu metrics
+  lib/common.sh                   palette + helpers every script sources
+  lib/menu.sh                     the popup-menu framework
+  lib/hover.sh                    hover highlight for every menu row
+  items/                          one file per module: item + menu rows
+  plugins/                        one file per module: updates + click actions
 ```
+
+One module = two files with the same name, `items/x.sh` and `plugins/x.sh`.
+The modules are `logo`, `workspaces`, `clock`, `battery`, `system`, `volume`,
+`network`, `bluetooth`.
+
+### The menus
+
+Every right-hand icon opens a popup built by `lib/menu.sh`: a status line,
+clickable entries with a hover highlight, and a single `…` entry at the bottom —
+the only click in the whole bar that still opens a window.
+
+| icon | menu |
+|---|---|
+| `` logo | Raycast, screenshot, reload the bar, reload AeroSpace |
+| `󰂯` bluetooth | power toggle, connected and known devices, click to (dis)connect |
+| `󰤨` network | Wi-Fi toggle, current signal, saved networks to switch to |
+| `󰕾` volume | scrollable level row, mute, output device picker |
+| `󰍛` system | CPU, RAM, uptime, top processes |
+| `󰁹` battery | charge, power source, and lock / sleep / restart / shut down |
+| clock | large clock, date, month grid |
+
+Two macOS limitations shape what those can show:
+
+- **Wi-Fi names are redacted.** Since macOS 15 the SSID is hidden from any
+  process without Location Services authorisation, which SketchyBar cannot get:
+  `networksetup -getairportnetwork` reports "not associated" while connected,
+  and `system_profiler` and `ipconfig getsummary` both return `<redacted>`. So
+  the connected row shows signal and band rather than a name. The list of saved
+  networks is *not* redacted, and those switch without a password.
+- **Low Power Mode needs `sudo`**, so the battery menu reports it but cannot
+  toggle it.
 
 `colors.sh` is the single source of truth for colour. `bordersrc` sources it,
 so recolouring the bar recolours the window borders too.
@@ -204,6 +244,10 @@ the built-in display needs a **smaller** value — by exactly that inset:
 outer.top = BAR_Y_OFFSET + BAR_HEIGHT + desired_gap - display_top_inset
 ```
 
+With the current flat 26pt bar that is `0 + 26 + 1 - 32 = negative` on this
+MacBook, i.e. the built-in display needs **no** extra gap: the bar fits entirely
+inside the notch inset. Externals get `27`.
+
 `install.sh` prints the real inset for each display. Note it also changes
 depending on whether the built-in is the *main* display (menu bar present) or a
 secondary one.
@@ -215,17 +259,27 @@ looks wrong on one display, check the name with `aerospace list-monitors`.
 ## Notable deviations from upstream
 
 - No pywal. `colors.sh` holds a static palette; upstream generated it.
-- `cpu`/`memory`/`network` click actions open **Activity Monitor** and Wi-Fi
-  settings. Upstream launched `btop` in `kitty`, sized with `xdpyinfo` — an X11
-  tool that does not exist on macOS, so those clicks did nothing.
-- Added a **Bluetooth picker** (`items/bluetooth.sh`, `plugins/bluetooth.sh`):
-  device list grouped by connected/other, click to connect or disconnect.
-  Needs `blueutil`.
-- `volume.sh` rewritten: one `osascript` launch per action instead of six
-  (~1.4s → ~0.2s per mute), and it toggles the mute flag rather than zeroing
-  the volume and restoring it from a temp file.
-- `workspace_manager.sh` guards against AeroSpace not answering (which used to
-  wipe every workspace item on wake) and serialises overlapping runs.
+- The SketchyBar config was **rewritten** around `lib/menu.sh`. Upstream's
+  click actions launched `btop` in `kitty`, sized with `xdpyinfo` — an X11 tool
+  that does not exist on macOS, so those clicks did nothing. Here every icon
+  opens a menu instead.
+- Bar modules are **icon-only**, like Omarchy's: no CPU/volume/battery figures
+  on the bar, and no memory module at all. The numbers live in the menus.
+- The **active workspace shows a dot** (`󱓻`) instead of its number, and
+  workspaces 1–5 are always present. AeroSpace has no `persistent-workspaces`
+  setting, so `plugins/workspaces.sh` unions its live list with `$WS_PERSISTENT`.
+- `plugins/workspaces.sh` guards against AeroSpace not answering (which used to
+  wipe every workspace item on wake) and serialises overlapping runs — AeroSpace
+  fires the change event twice per switch.
+- `plugins/volume.sh` runs the mutation and the read-back in **one** `osascript`
+  launch instead of six (~1.4s → ~0.2s per mute), and toggles the mute flag
+  rather than zeroing the volume and restoring it from a temp file.
+- Menu rows are a fixed pool, created once and only `--set` afterwards, and
+  every refresh goes out as a single `sketchybar` call. Adding rows per open
+  made the popup frame appear before its contents; unbatched updates cost ~35
+  IPC round-trips per refresh.
+- `level_bar()` in `plugins/volume.sh` appends with `+=`: macOS ships bash 3.2,
+  where `out="$out█"` truncates a multi-byte character to a single byte.
 
 ## Requirements
 
@@ -233,7 +287,9 @@ Installed by `install.sh`:
 
 - `felixkratz/formulae/sketchybar`, `felixkratz/formulae/borders`
 - `nikitabobko/tap/aerospace` (cask)
-- `blueutil` — Bluetooth picker
+- `blueutil` — acting on Bluetooth devices in the bluetooth menu
+- `switchaudio-osx` — output device switching in the volume menu (optional:
+  without it the menu simply drops its "Ausgabe" section)
 - `font-jetbrains-mono-nerd-font` (cask) — the bar's glyphs
 - `jq` — used by several plugins (macOS ships one at `/usr/bin/jq`)
 - `raycast` (cask) — launcher

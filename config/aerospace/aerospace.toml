@@ -62,18 +62,21 @@ inner.vertical   = 6
 outer.left       = 6
 outer.right      = 6
 # Derived from the SketchyBar geometry in ~/.config/sketchybar/variables.sh:
-#   BAR_Y_OFFSET (4) + BAR_HEIGHT (35) = 39pt of bar, + 1pt gap = 40.
+#   BAR_Y_OFFSET (0) + BAR_HEIGHT (26) = 26pt of bar, + 1pt gap = 27.
 # Change either of those and this number has to follow.
 #
 # Per monitor: SketchyBar draws from the physical top of the screen, but
 # AeroSpace measures outer.top from the display's usable area -- and the
-# built-in Retina display's usable area already starts 28pt down (notch /
+# built-in Retina display's usable area already starts 32pt down (notch /
 # safe-area inset), while both externals start at 0.
-# 40 - 28 = 12 for the built-in; 40 everywhere else.
+# 27 - 32 is negative, so the built-in needs NO extra gap at all: the flat
+# 26pt bar fits entirely inside the notch inset. 27 everywhere else.
+# Measure the inset per display with:
+#   ./install.sh --only sketchybar --dry-run   (prints "Per-display top inset")
 # Pattern is unanchored and spelled to match whether or not AeroSpace's
 # monitor regex is case-sensitive; it cannot collide with "MPG321UR-QD"
 # or "LG ULTRAFINE".
-outer.top        = [{ monitor."[Bb]uilt-[Ii]n" = 12 }, 40]
+outer.top        = [{ monitor."[Bb]uilt-[Ii]n" = 0 }, 27]
 outer.bottom     = 6
 
 

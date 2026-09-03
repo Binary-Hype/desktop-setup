@@ -45,7 +45,8 @@ list_components() {
 Components:
   aerospace    Tiling window manager (cask: nikitabobko/tap/aerospace)
                config/aerospace/aerospace.toml
-  sketchybar   Status bar (formula + JetBrainsMono Nerd Font, blueutil, jq)
+  sketchybar   Status bar (formula + JetBrainsMono Nerd Font, blueutil,
+               switchaudio-osx, jq)
                config/sketchybar/
   borders      JankyBorders window outlines (formula)
                config/borders/bordersrc
@@ -198,7 +199,8 @@ else
 
   if want sketchybar; then
     brew_formula felixkratz/formulae/sketchybar
-    brew_formula blueutil                       # Bluetooth picker
+    brew_formula blueutil                       # Bluetooth menu
+    brew_formula switchaudio-osx                # output devices in the sound menu
     brew_cask font-jetbrains-mono-nerd-font     # the bar's glyphs
     command -v jq >/dev/null 2>&1 || run brew install jq
   fi
@@ -338,7 +340,7 @@ want sketchybar && cat <<'NOTE'
         defaults write NSGlobalDomain _HIHideMenuBar -bool true
       * Auto-hide the Dock, or it eats the bottom gap:
         defaults write com.apple.dock autohide -bool true; killall Dock
-      * The Bluetooth picker needs SketchyBar to have Bluetooth access
+      * The Bluetooth menu needs SketchyBar to have Bluetooth access
         (System Settings > Privacy & Security > Bluetooth) -- macOS
         normally prompts on first use.
 NOTE
