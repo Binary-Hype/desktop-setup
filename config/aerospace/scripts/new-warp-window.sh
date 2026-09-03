@@ -34,9 +34,14 @@ AEROSPACE="$(command -v aerospace || echo /opt/homebrew/bin/aerospace)"
 open_warp() {
   env -u CLAUDE_CODE_CHILD_SESSION \
       -u CLAUDECODE \
+      -u CLAUDE_CODE_ENTRYPOINT \
+      -u CLAUDE_CODE_EXECPATH \
       -u CLAUDE_CODE_SESSION_ID \
       -u CLAUDE_CODE_MESSAGING_SOCKET \
       -u CLAUDE_CODE_MESSAGING_TOKEN \
+      -u CLAUDE_PID \
+      -u CLAUDE_EFFORT \
+      -u AI_AGENT \
       open -a "$APP"
 }
 

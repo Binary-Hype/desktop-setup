@@ -135,6 +135,27 @@ info() { printf '    %s\n' "$*"; }
 warn() { printf '    !! %s\n' "$*" >&2; }
 run()  { if $DRY_RUN; then info "would run: $*"; else "$@"; fi; }
 
+# A GUI app keeps the environment of whatever launched it for the life of the
+# process, and everything it later spawns inherits that. When this script runs
+# from inside a Claude Code bash call, CLAUDE_CODE_CHILD_SESSION=1 leaks into
+# AeroSpace -- and from there into every window AeroSpace opens, where Claude
+# Code disables transcript saving because it thinks it is a nested session.
+# Prefix service and app launches with this so they start from a clean slate.
+# (config/aerospace/scripts/new-warp-window.sh strips the same set.)
+no_claude_env() {
+  env -u CLAUDE_CODE_CHILD_SESSION \
+      -u CLAUDECODE \
+      -u CLAUDE_CODE_ENTRYPOINT \
+      -u CLAUDE_CODE_EXECPATH \
+      -u CLAUDE_CODE_SESSION_ID \
+      -u CLAUDE_CODE_MESSAGING_SOCKET \
+      -u CLAUDE_CODE_MESSAGING_TOKEN \
+      -u CLAUDE_PID \
+      -u CLAUDE_EFFORT \
+      -u AI_AGENT \
+      "$@"
+}
+
 [ "$(uname -s)" = "Darwin" ] || { echo "macOS only." >&2; exit 1; }
 $DRY_RUN && echo "(dry run -- nothing will be changed)"
 echo "Components: ${COMPONENTS[*]}"
@@ -246,18 +267,18 @@ if $NO_SERVICES; then
   step "Skipping services (--no-services)"
 else
   step "Starting services"
-  want sketchybar && run brew services restart sketchybar
-  want borders    && run brew services restart borders
+  want sketchybar && run no_claude_env brew services restart sketchybar
+  want borders    && run no_claude_env brew services restart borders
   if want raycast; then
     if [ -d "/Applications/Raycast.app" ]; then
-      run open -a Raycast
+      run no_claude_env open -a Raycast
     else
       warn "Raycast.app not found in /Applications"
     fi
   fi
   if want aerospace; then
     if [ -d "/Applications/AeroSpace.app" ]; then
-      run open -a AeroSpace
+      run no_claude_env open -a AeroSpace
       # `open` is a no-op if it is already running, so reload explicitly.
       if ! $DRY_RUN && command -v aerospace >/dev/null 2>&1; then
         sleep 2

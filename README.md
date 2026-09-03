@@ -128,6 +128,20 @@ Two requirements:
   GitHub, Jira) no longer receive it. Change the binding to `alt-enter` in
   `aerospace.toml` to get it back — plain `alt-enter` types no character.
 
+### Environment leaks
+
+A GUI app keeps the environment of whatever launched it for the life of the
+process, and Warp's terminal server hands that environment to every tab it ever
+opens. Launch AeroSpace (or Warp) from inside a Claude Code shell once and
+`CLAUDE_CODE_CHILD_SESSION=1` sticks around for good, in every window, where
+Claude Code disables transcript saving because it thinks it is a nested session.
+
+Both launch points strip the `CLAUDE_*` / `AI_AGENT` markers first —
+`open_warp()` in `new-warp-window.sh`, and `no_claude_env` in `install.sh`
+(which also wraps the Raycast and `brew services` launches). Keep the two lists
+in sync. Stripping only helps at launch: a Warp or AeroSpace process that
+already carries the markers has to be quit and reopened to shed them.
+
 ## Keybindings — workspaces
 
 | keys | action |
