@@ -25,6 +25,21 @@ APP_ID="dev.warp.Warp-Stable"
 MENU_ITEM="New Window"
 AEROSPACE="$(command -v aerospace || echo /opt/homebrew/bin/aerospace)"
 
+# `open` hands the launched app its caller's environment, and Warp's
+# terminal-server then keeps it for the life of the process -- so every tab it
+# ever spawns inherits it. When this script runs from inside a Claude Code bash
+# call (which is how it gets tested), that means CLAUDE_CODE_CHILD_SESSION=1
+# leaks into every future shell, and Claude Code disables transcript saving
+# there because it thinks it is a nested session. Strip the markers first.
+open_warp() {
+  env -u CLAUDE_CODE_CHILD_SESSION \
+      -u CLAUDECODE \
+      -u CLAUDE_CODE_SESSION_ID \
+      -u CLAUDE_CODE_MESSAGING_SOCKET \
+      -u CLAUDE_CODE_MESSAGING_TOKEN \
+      open -a "$APP"
+}
+
 window_ids() {
   "$AEROSPACE" list-windows --monitor all --app-bundle-id "$APP_ID" \
     --format '%{window-id}' 2>/dev/null
@@ -51,14 +66,14 @@ if [ "$BEFORE" -gt 0 ]; then
     # Menu layout changed, or the click was refused -- fall back to the old
     # activate-and-type route.
     FELL_BACK=true
-    open -a "$APP"
+    open_warp
     sleep 0.25
     osascript -e 'tell application "System Events" to keystroke "n" using command down' 2>/dev/null
   fi
 else
   # Not running (or running with no windows): activating opens one by itself.
   FELL_BACK=true
-  open -a "$APP"
+  open_warp
 fi
 
 # Wait for the new window and work out which one it is. The menu route does not
