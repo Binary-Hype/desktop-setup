@@ -163,7 +163,7 @@ the only click in the whole bar that still opens a window.
 | `󰂯` bluetooth | power toggle, connected and known devices, click to (dis)connect |
 | `󰤨` network | Wi-Fi toggle, current signal, saved networks to switch to |
 | `󰕾` volume | scrollable level row, mute, output device picker |
-| `󰍛` system | CPU, RAM, uptime, top processes |
+| `󰍛` system | CPU, RAM, uptime, top processes (refreshed every second while open) |
 | `󰁹` battery | charge, power source, and lock / sleep / restart / shut down |
 | clock | large clock, date, month grid |
 
@@ -336,8 +336,24 @@ looks wrong on one display, check the name with `aerospace list-monitors`.
 - Icons are **Phosphor**, not Nerd Font glyphs, so they are one consistent set
   rather than a mix of Material and Font Awesome. Phosphor draws five battery
   levels where Omarchy ramps through ten, so the thresholds are wider.
-- The **active workspace shows a dot** (`󱓻`) instead of its number, and
-  workspaces 1–5 are always present. AeroSpace has no `persistent-workspaces`
+- **Workspaces are split across the monitors.** Each `space.*` item is pinned
+  with `display=N` to the bar of the monitor its workspace is on, so every
+  screen lists only its own workspaces and you can read off the screen in front
+  of you what is on it. `N` is an index into `NSScreen.screens`, which is what
+  SketchyBar counts by — *not* AeroSpace's own monitor id, which is ordered by
+  physical position and differs from it on a multi-monitor setup. AeroSpace
+  exposes the SketchyBar one as `%{monitor-appkit-nsscreen-screens-id}`.
+  There is no "draw on every display" value to fall back on: anything
+  SketchyBar cannot parse as an index leaves the item on no bar at all, so
+  workspaces that exist on no monitor (the empty persistent ones) go to the
+  focused monitor's bar — where pressing `ctrl+alt+N` would open them anyway.
+- The workspace **showing on a monitor keeps its number**, in bold accent when
+  that monitor has the focus and bold muted accent when it does not; workspaces
+  with windows are plain, empty ones dimmed. Omarchy replaces the focused
+  workspace's number with a dot, which works there because every workspace sits
+  in one row and its position tells you the number — with one bar per monitor a
+  lone dot would name nothing.
+- Workspaces 1–5 are always present. AeroSpace has no `persistent-workspaces`
   setting, so `plugins/workspaces.sh` unions its live list with `$WS_PERSISTENT`.
 - `plugins/workspaces.sh` guards against AeroSpace not answering (which used to
   wipe every workspace item on wake) and serialises overlapping runs — AeroSpace

@@ -75,13 +75,25 @@ populate() {
   menu_flush
 }
 
+# The menu shows live figures, so it ticks once a second while it is open and
+# drops back to the idle rate when it closes. Both go through here so the rate
+# can never be left running fast behind a closed menu.
+sys_menu_close() {
+  sketchybar --set system popup.drawing=off "update_freq=$SYS_UPDATE_FREQ"
+}
+
+sys_menu_open() {
+  menu_open system
+  sketchybar --set system "update_freq=$SYS_UPDATE_FREQ_OPEN"
+}
+
 case "$1" in
 "populate")
   populate
   exit 0
   ;;
 "monitor")
-  menu_close system
+  sys_menu_close
   open -a "Activity Monitor"
   exit 0
   ;;
@@ -89,20 +101,25 @@ esac
 
 case "$SENDER" in
 "mouse.exited.global" | "display_change")
-  menu_close system
+  sys_menu_close
   ;;
 "mouse.clicked")
   if menu_is_open system; then
-    menu_close system
+    sys_menu_close
   else
-    menu_open system
+    sys_menu_open
     populate
   fi
   ;;
 *)
   update_bar_item
   # Keep the menu current while it is open, so the figures are live rather than
-  # frozen at the moment it was opened.
-  menu_is_open system && populate
+  # frozen at the moment it was opened. A tick that arrives with the menu shut
+  # also repairs the rate, in case a close was ever missed.
+  if menu_is_open system; then
+    populate
+  else
+    sketchybar --set system "update_freq=$SYS_UPDATE_FREQ"
+  fi
   ;;
 esac

@@ -65,10 +65,19 @@ export WS_LABEL_PADDING=6
 # bar. AeroSpace has no such setting -- plugins/workspaces.sh unions this list
 # with the workspaces that actually exist.
 export WS_PERSISTENT="1 2 3 4 5"
-# Omarchy replaces the focused workspace's number with a dot. Phosphor's
-# outline circle is too faint at this size, so the dot is drawn from the Fill
-# family (see ICON_WS_ACTIVE in lib/icons.sh).
-export WS_ACTIVE_FONT="Phosphor-Fill:Regular:9.0"
+# The workspace showing on a monitor keeps its number (see plugins/workspaces.sh)
+# and is set apart by weight and colour rather than by Omarchy's dot: bold accent
+# on the focused monitor, bold muted accent on the others.
+export WS_ACTIVE_FONT="$BAR_FONT:Bold:13.0"
+
+# --- System monitor -----------------------------------------------------------
+# The bar itself only carries an icon, so a slow tick is enough while the menu
+# is shut. With it open the figures are on screen and want to move, so the item
+# is switched to a one-second tick for as long as it is open (plugins/system.sh)
+# -- sampling CPU, RAM and the process table costs a few `ps` calls, which is
+# not something to pay every second all day.
+export SYS_UPDATE_FREQ=5
+export SYS_UPDATE_FREQ_OPEN=1
 
 # --- Menus (popups) -----------------------------------------------------------
 export MENU_WIDTH=290

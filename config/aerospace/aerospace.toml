@@ -33,7 +33,14 @@ default-root-container-orientation = 'auto'
 key-mapping.preset = 'qwerty'
 
 # Mouse follows focus when focused monitor changes
-on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
+# Focusing another monitor moves a workspace's "visible here" state around, and
+# the empty persistent workspaces follow the focused monitor's bar, so SketchyBar
+# has to redraw. on-focus-changed does not always cover it: focusing an empty
+# monitor changes no window focus.
+on-focused-monitor-changed = [
+  'move-mouse monitor-lazy-center',
+  'exec-and-forget sketchybar --trigger aerospace_workspace_change'
+]
 
 # Notify SketchyBar on every focus change so spaces + front_app stay in sync
 on-focus-changed = [
